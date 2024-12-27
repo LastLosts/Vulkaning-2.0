@@ -6,12 +6,14 @@
 
 namespace ving
 {
-VulkanCore::VulkanCore()
+VulkanCore::VulkanCore(const Window &window)
 {
     std::vector<const char *> instance_layers{
         "VK_LAYER_KHRONOS_validation",
     };
-    std::vector<const char *> instance_extensions{};
+    std::vector<const char *> instance_extensions = window.vulkan_extensions();
+    /*std::vector<const char *> instance_extensions{};*/
+    /*instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);*/
 
     std::vector<const char *> device_extensions{};
 

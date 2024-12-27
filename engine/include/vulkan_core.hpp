@@ -1,5 +1,7 @@
 #pragma once
 
+#include "window.hpp"
+#include <memory>
 #include <vulkan/vulkan.h>
 
 namespace ving
@@ -7,7 +9,7 @@ namespace ving
 class VulkanCore
 {
   public:
-    VulkanCore();
+    VulkanCore(const Window &window);
 
   private:
     VkInstance m_instance;

@@ -1,0 +1,3 @@
+[submodule "engine/dependencies/SDL"]
+	path = engine/dependencies/SDL
+	url = https://github.com/libsdl-org/SDL

@@ -1,21 +1,25 @@
 #pragma once
 
 #include "vulkan_core.hpp"
+#include "window.hpp"
 
-namespace ving {
-class Engine {
+namespace ving
+{
+class Engine
+{
 
-public:
-  Engine();
+  public:
+    Engine();
 
-  [[nodiscard]] bool running() { return m_running; }
-  void run();
-  void update();
+    [[nodiscard]] bool running() { return m_running; }
+    void run();
+    void update();
 
-private:
-  bool m_running;
+  private:
+    bool m_running;
 
-  VulkanCore m_core;
+    Window m_window;
+    VulkanCore m_core;
 };
 
 } // namespace ving
