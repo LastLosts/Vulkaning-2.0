@@ -4,10 +4,8 @@
 namespace ving
 {
 
-Engine::Engine() : m_window{400, 400}, m_core{m_window}
+Engine::Engine() : m_window{m_instance, 400, 400}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window}
 {
-    // As long as nothing is allocated before throwing we should be fine
-    // Even if we do OS will clean after us
 }
 void Engine::run()
 {
@@ -22,6 +20,9 @@ void Engine::update()
         if (event.type == SDL_EVENT_QUIT)
             m_running = false;
     }
+    RenderFrames::FrameInfo frame = m_render_frames.begin_frame();
+
+    m_render_frames.end_frame();
 }
 
 } // namespace ving

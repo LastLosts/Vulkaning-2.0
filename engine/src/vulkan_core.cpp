@@ -1,23 +1,17 @@
 #include "vulkan_core.hpp"
+#include "SDL3/SDL_vulkan.h"
 #include "utility/vulkan_utils.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
-VulkanCore::VulkanCore(const Window &window)
+VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m_instance{instance.instance}
 {
-    std::vector<const char *> instance_layers{
-        "VK_LAYER_KHRONOS_validation",
-    };
-    std::vector<const char *> instance_extensions = window.vulkan_extensions();
-    /*std::vector<const char *> instance_extensions{};*/
-    /*instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);*/
-
     std::vector<const char *> device_extensions{};
 
-    m_instance = create_vulkan_instance(instance_extensions, instance_layers);
     uint32_t device_count{};
     vkEnumeratePhysicalDevices(m_instance, &device_count, nullptr);
     std::vector<VkPhysicalDevice> available_devices{device_count};
@@ -33,12 +27,11 @@ VulkanCore::VulkanCore(const Window &window)
     std::vector<VkQueueFamilyProperties> queue_family_properties{family_count};
     vkGetPhysicalDeviceQueueFamilyProperties(m_physical_device, &family_count, queue_family_properties.data());
 
-    uint32_t graphics_queue_family{};
     auto graphics_it =
         std::find_if(queue_family_properties.begin(), queue_family_properties.end(),
                      [](VkQueueFamilyProperties properties) { return properties.queueFlags | VK_QUEUE_GRAPHICS_BIT; });
     if (graphics_it != queue_family_properties.end())
-        graphics_queue_family = std::distance(queue_family_properties.begin(), graphics_it);
+        m_graphics_queue_family = std::distance(queue_family_properties.begin(), graphics_it);
     else
         throw std::runtime_error("Failed to find transfer queue");
 
@@ -53,7 +46,23 @@ VulkanCore::VulkanCore(const Window &window)
 
     float queue_priority = 1.0f;
 
-    std::vector<uint32_t> queue_families{graphics_queue_family, transfer_queue_family};
+    uint32_t present_queue_family;
+    VkBool32 supported;
+    for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
+    {
+        vkGetPhysicalDeviceSurfaceSupportKHR(m_physical_device, i, window.vulkan_surface(), &supported);
+        if (supported)
+        {
+            present_queue_family = i;
+            break;
+        }
+    }
+    if (!supported)
+    {
+        throw std::runtime_error("Failed to find suitable present queue");
+    }
+
+    std::vector<uint32_t> queue_families{m_graphics_queue_family, transfer_queue_family, present_queue_family};
     queue_families.erase(std::unique(queue_families.begin(), queue_families.end()), queue_families.end());
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos{};
@@ -70,5 +79,9 @@ VulkanCore::VulkanCore(const Window &window)
     }
 
     m_device = create_vulkan_device(m_physical_device, queue_create_infos, device_extensions);
+}
+VulkanCore::~VulkanCore()
+{
+    vkDestroyDevice(m_device, nullptr);
 }
 } // namespace ving
