@@ -18,6 +18,8 @@ class Swapchain
     Swapchain &operator=(Swapchain &&) = delete;
 
     uint32_t acquire_image(VkSemaphore image_acquire_semaphore);
+    void transition_swapchain_image_to_present(VkCommandBuffer cmd, uint32_t aqcuired_image_index);
+    void present_image(VkSemaphore wait_semaphore, uint32_t acquire_image_index);
 
   private:
     VkDevice m_device;

@@ -1,5 +1,6 @@
 #include "vulkan_utils.hpp"
 #include <cassert>
+#include <iostream>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
@@ -59,12 +60,22 @@ VkDevice create_vulkan_device(VkPhysicalDevice physical_device, std::span<VkDevi
 {
     VkDevice device{};
 
+    VkPhysicalDeviceVulkan13Features features13{};
+    features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+
+    VkPhysicalDeviceFeatures2 features2{};
+    features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    features2.pNext = &features13;
+
+    vkGetPhysicalDeviceFeatures2(physical_device, &features2);
+
     VkDeviceCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     create_info.queueCreateInfoCount = device_queue_infos.size();
     create_info.pQueueCreateInfos = device_queue_infos.data();
     create_info.enabledExtensionCount = device_extensions.size();
     create_info.ppEnabledExtensionNames = device_extensions.data();
+    create_info.pNext = &features2;
 
     if (vkCreateDevice(physical_device, &create_info, nullptr, &device) != VK_SUCCESS)
         throw std::runtime_error("Failed to create vulkan device");
@@ -180,6 +191,7 @@ VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat fo
     info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     info.format = format;
     info.subresourceRange = subresource_range;
+    info.image = image;
 
     vkCreateImageView(device, &info, nullptr, &view);
 
@@ -187,9 +199,29 @@ VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat fo
 }
 void transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout current_layout, VkImageLayout new_layout)
 {
+    VkImageSubresourceRange subresource_range{};
+    subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresource_range.baseMipLevel = 0;
+    subresource_range.levelCount = VK_REMAINING_MIP_LEVELS;
+    subresource_range.baseArrayLayer = 0;
+    subresource_range.layerCount = VK_REMAINING_ARRAY_LAYERS;
+
     VkImageMemoryBarrier2 image_barrier{};
     image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
     image_barrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
     image_barrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
+    image_barrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+    image_barrier.dstAccessMask = VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT;
+    image_barrier.oldLayout = current_layout;
+    image_barrier.newLayout = new_layout;
+    image_barrier.subresourceRange = subresource_range;
+    image_barrier.image = image;
+
+    VkDependencyInfo dependency_info{};
+    dependency_info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    dependency_info.imageMemoryBarrierCount = 1;
+    dependency_info.pImageMemoryBarriers = &image_barrier;
+
+    vkCmdPipelineBarrier2(cmd, &dependency_info);
 }
 } // namespace ving

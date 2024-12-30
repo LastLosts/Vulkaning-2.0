@@ -42,7 +42,10 @@ class RenderFrames final
   private:
     uint64_t m_frame_number;
 
+    VkQueue m_graphics_queue;
+
     VkDevice m_device;
+    uint32_t m_acquired_image_index;
     Swapchain m_swapchain;
 };
 } // namespace ving

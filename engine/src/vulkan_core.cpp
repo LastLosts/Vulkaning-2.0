@@ -10,7 +10,10 @@ namespace ving
 {
 VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m_instance{instance.instance}
 {
-    std::vector<const char *> device_extensions{};
+    std::vector<const char *> device_extensions{
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+    };
 
     uint32_t device_count{};
     vkEnumeratePhysicalDevices(m_instance, &device_count, nullptr);
@@ -46,14 +49,13 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
 
     float queue_priority = 1.0f;
 
-    uint32_t present_queue_family;
     VkBool32 supported;
     for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
     {
         vkGetPhysicalDeviceSurfaceSupportKHR(m_physical_device, i, window.vulkan_surface(), &supported);
         if (supported)
         {
-            present_queue_family = i;
+            m_present_queue_family = i;
             break;
         }
     }
@@ -62,7 +64,7 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
         throw std::runtime_error("Failed to find suitable present queue");
     }
 
-    std::vector<uint32_t> queue_families{m_graphics_queue_family, transfer_queue_family, present_queue_family};
+    std::vector<uint32_t> queue_families{m_graphics_queue_family, transfer_queue_family, m_present_queue_family};
     queue_families.erase(std::unique(queue_families.begin(), queue_families.end()), queue_families.end());
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos{};

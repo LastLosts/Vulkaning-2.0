@@ -7,6 +7,8 @@ namespace ving
 RenderFrames::RenderFrames(const VulkanCore &core, const Window &window)
     : m_device{core.device()}, m_swapchain{core, window}
 {
+    vkGetDeviceQueue(m_device, core.graphics_queue_family(), 0, &m_graphics_queue);
+
     for (auto &&frame : m_frames)
     {
         frame.command_pool = create_vulkan_command_pool(core.device(), core.graphics_queue_family(),
@@ -36,7 +38,7 @@ RenderFrames::FrameInfo RenderFrames::begin_frame()
     vkWaitForFences(m_device, 1, &current_frame.render_fence, VK_TRUE, 1000000000);
     vkResetFences(m_device, 1, &current_frame.render_fence);
 
-    uint32_t swapchain_image_index = m_swapchain.acquire_image(current_frame.image_acquired_semaphore);
+    m_acquired_image_index = m_swapchain.acquire_image(current_frame.image_acquired_semaphore);
 
     VkCommandBuffer cmd = current_frame.commands;
 
@@ -53,6 +55,39 @@ RenderFrames::FrameInfo RenderFrames::begin_frame()
 void RenderFrames::end_frame()
 {
     FrameResources &current_frame = m_frames[m_frame_number % frames_in_flight];
+    VkCommandBuffer cmd = current_frame.commands;
+
+    m_swapchain.transition_swapchain_image_to_present(cmd, m_acquired_image_index);
+
+    vkEndCommandBuffer(cmd);
+
+    VkCommandBufferSubmitInfo cmd_info{};
+    cmd_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+    cmd_info.commandBuffer = cmd;
+
+    VkSemaphoreSubmitInfo signal_info{};
+    signal_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+    signal_info.semaphore = current_frame.render_finished_semaphore;
+    signal_info.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+    signal_info.value = 1;
+
+    VkSemaphoreSubmitInfo wait_info{};
+    wait_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
+    wait_info.semaphore = current_frame.image_acquired_semaphore;
+    wait_info.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+    wait_info.value = 1;
+
+    VkSubmitInfo2 submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+    submit.signalSemaphoreInfoCount = 1;
+    submit.pSignalSemaphoreInfos = &signal_info;
+    submit.waitSemaphoreInfoCount = 1;
+    submit.pWaitSemaphoreInfos = &wait_info;
+    submit.commandBufferInfoCount = 1;
+    submit.pCommandBufferInfos = &cmd_info;
+
+    vkQueueSubmit2(m_graphics_queue, 1, &submit, current_frame.render_fence);
+    m_swapchain.present_image(current_frame.render_finished_semaphore, m_acquired_image_index);
 
     ++m_frame_number;
 }

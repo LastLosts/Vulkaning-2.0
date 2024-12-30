@@ -26,8 +26,6 @@ VulkanInstance::VulkanInstance()
         instance_extensions.push_back(window_extensions[i]);
     }
 
-    /*instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);*/
-
     instance = create_vulkan_instance(instance_extensions, instance_layers);
 }
 VulkanInstance::~VulkanInstance()
