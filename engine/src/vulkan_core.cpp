@@ -1,10 +1,10 @@
+#define VMA_IMPLEMENTATION
 #include "vulkan_core.hpp"
-#include "SDL3/SDL_vulkan.h"
+
 #include "utility/vulkan_utils.hpp"
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
@@ -81,9 +81,18 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
     }
 
     m_device = create_vulkan_device(m_physical_device, queue_create_infos, device_extensions);
+
+    VmaAllocatorCreateInfo allocator_info{};
+    allocator_info.instance = m_instance;
+    allocator_info.physicalDevice = m_physical_device;
+    allocator_info.device = m_device;
+    allocator_info.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+
+    vmaCreateAllocator(&allocator_info, &m_allocator);
 }
 VulkanCore::~VulkanCore()
 {
+    vmaDestroyAllocator(m_allocator);
     vkDestroyDevice(m_device, nullptr);
 }
 } // namespace ving

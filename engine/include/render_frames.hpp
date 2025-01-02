@@ -1,6 +1,7 @@
 #pragma once
 
 #include "swapchain.hpp"
+#include "texture_2d.hpp"
 #include "vulkan_core.hpp"
 #include <array>
 #include <vulkan/vulkan_core.h>
@@ -29,6 +30,7 @@ class RenderFrames final
 
     struct FrameInfo
     {
+        Texture2D *draw_img;
         VkCommandBuffer cmd;
     };
 
@@ -41,6 +43,7 @@ class RenderFrames final
 
   private:
     uint64_t m_frame_number;
+    Texture2D m_draw_image;
 
     VkQueue m_graphics_queue;
 

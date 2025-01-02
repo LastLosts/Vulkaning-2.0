@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vk_mem_alloc.h"
 #include "window.hpp"
-#include <vulkan/vulkan.h>
 
 namespace ving
 {
@@ -20,11 +20,13 @@ class VulkanCore
     [[nodiscard]] uint32_t present_queue_family() const noexcept { return m_present_queue_family; }
     [[nodiscard]] VkDevice device() const noexcept { return m_device; }
     [[nodiscard]] VkPhysicalDevice physical_device() const noexcept { return m_physical_device; }
+    [[nodiscard]] VmaAllocator allocator() const noexcept { return m_allocator; }
 
   private:
     VkInstance m_instance;
     VkPhysicalDevice m_physical_device;
     VkDevice m_device;
+    VmaAllocator m_allocator;
 
     uint32_t m_graphics_queue_family;
     uint32_t m_present_queue_family;

@@ -1,3 +1,6 @@
 [submodule "engine/dependencies/SDL"]
 	path = engine/dependencies/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "engine/dependencies/VulkanMemoryAllocator"]
+	path = engine/dependencies/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator

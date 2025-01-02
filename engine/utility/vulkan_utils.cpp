@@ -60,14 +60,21 @@ VkDevice create_vulkan_device(VkPhysicalDevice physical_device, std::span<VkDevi
 {
     VkDevice device{};
 
+    VkPhysicalDeviceVulkan12Features features12{};
+    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    features12.bufferDeviceAddress = VK_TRUE;
+
     VkPhysicalDeviceVulkan13Features features13{};
     features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    features13.dynamicRendering = VK_TRUE;
+    features13.synchronization2 = VK_TRUE;
+    features13.pNext = &features12;
 
     VkPhysicalDeviceFeatures2 features2{};
     features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
     features2.pNext = &features13;
 
-    vkGetPhysicalDeviceFeatures2(physical_device, &features2);
+    /*vkGetPhysicalDeviceFeatures2(physical_device, &features2);*/
 
     VkDeviceCreateInfo create_info{};
     create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -175,6 +182,27 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
 
     return swapchain;
 }
+VkImage create_vulkan_image(VkDevice device, VkFormat format, VkExtent3D extent, VkImageUsageFlags usage,
+                            VkImageType type)
+{
+    VkImage image{};
+
+    VkImageCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    info.imageType = type;
+    info.format = format;
+    info.extent = extent;
+    info.mipLevels = 1;
+    info.arrayLayers = 1;
+    info.samples = VK_SAMPLE_COUNT_1_BIT;
+    info.tiling = VK_IMAGE_TILING_OPTIMAL;
+    info.usage = usage;
+
+    if (vkCreateImage(device, &info, nullptr, &image) != VK_SUCCESS)
+        throw std::runtime_error("Failed to create vulkan image");
+
+    return image;
+}
 VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat format)
 {
     VkImageView view{};
@@ -224,4 +252,41 @@ void transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout current_
 
     vkCmdPipelineBarrier2(cmd, &dependency_info);
 }
+void copy_image_to_image(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D src_size,
+                         VkExtent2D dst_size)
+{
+    VkImageBlit2 blit{};
+    blit.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2;
+
+    blit.srcOffsets[1].x = src_size.width;
+    blit.srcOffsets[1].y = src_size.height;
+    blit.srcOffsets[1].z = 1;
+
+    blit.dstOffsets[1].x = dst_size.width;
+    blit.dstOffsets[1].y = dst_size.height;
+    blit.dstOffsets[1].z = 1;
+
+    blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.srcSubresource.baseArrayLayer = 0;
+    blit.srcSubresource.layerCount = 1;
+    blit.srcSubresource.mipLevel = 0;
+
+    blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.dstSubresource.baseArrayLayer = 0;
+    blit.dstSubresource.layerCount = 1;
+    blit.dstSubresource.mipLevel = 0;
+
+    VkBlitImageInfo2 info{};
+    info.sType = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2;
+    info.srcImage = source;
+    info.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    info.dstImage = destination;
+    info.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    info.filter = VK_FILTER_LINEAR;
+    info.regionCount = 1;
+    info.pRegions = &blit;
+
+    vkCmdBlitImage2(cmd, &info);
+}
+
 } // namespace ving

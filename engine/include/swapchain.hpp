@@ -18,6 +18,8 @@ class Swapchain
     Swapchain &operator=(Swapchain &&) = delete;
 
     uint32_t acquire_image(VkSemaphore image_acquire_semaphore);
+    void copy_image_to_swapchain(VkCommandBuffer cmd, VkImage source, VkExtent2D extent,
+                                 uint32_t swapchain_image_index);
     void transition_swapchain_image_to_present(VkCommandBuffer cmd, uint32_t aqcuired_image_index);
     void present_image(VkSemaphore wait_semaphore, uint32_t acquire_image_index);
 
@@ -25,8 +27,9 @@ class Swapchain
     VkDevice m_device;
 
     VkSwapchainKHR m_swapchain;
-    std::vector<VkImage> m_swapchain_images;
-    std::vector<VkImageView> m_swapchain_image_views;
+    VkExtent2D m_image_extent;
+    std::vector<VkImage> m_images;
+    std::vector<VkImageView> m_views;
 
     VkQueue m_present_queue;
 };

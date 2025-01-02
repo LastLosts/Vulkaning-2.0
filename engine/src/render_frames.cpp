@@ -5,7 +5,11 @@
 namespace ving
 {
 RenderFrames::RenderFrames(const VulkanCore &core, const Window &window)
-    : m_device{core.device()}, m_swapchain{core, window}
+    : m_device{core.device()}, m_swapchain{core, window},
+      m_draw_image{core, VkExtent2D(window.width(), window.height()),
+                   VkImageUsageFlags(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT),
+                   VMA_MEMORY_USAGE_GPU_ONLY}
 {
     vkGetDeviceQueue(m_device, core.graphics_queue_family(), 0, &m_graphics_queue);
 
@@ -34,13 +38,12 @@ RenderFrames::~RenderFrames()
 RenderFrames::FrameInfo RenderFrames::begin_frame()
 {
     FrameResources &current_frame = m_frames[m_frame_number % frames_in_flight];
+    VkCommandBuffer cmd = current_frame.commands;
 
     vkWaitForFences(m_device, 1, &current_frame.render_fence, VK_TRUE, 1000000000);
     vkResetFences(m_device, 1, &current_frame.render_fence);
 
     m_acquired_image_index = m_swapchain.acquire_image(current_frame.image_acquired_semaphore);
-
-    VkCommandBuffer cmd = current_frame.commands;
 
     vkResetCommandBuffer(cmd, 0);
 
@@ -50,13 +53,14 @@ RenderFrames::FrameInfo RenderFrames::begin_frame()
 
     vkBeginCommandBuffer(cmd, &begin_info);
 
-    return {current_frame.commands};
+    return FrameInfo{&m_draw_image, current_frame.commands};
 }
 void RenderFrames::end_frame()
 {
     FrameResources &current_frame = m_frames[m_frame_number % frames_in_flight];
     VkCommandBuffer cmd = current_frame.commands;
 
+    m_swapchain.copy_image_to_swapchain(cmd, m_draw_image.image(), m_draw_image.extent(), m_acquired_image_index);
     m_swapchain.transition_swapchain_image_to_present(cmd, m_acquired_image_index);
 
     vkEndCommandBuffer(cmd);
