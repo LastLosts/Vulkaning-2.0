@@ -35,8 +35,12 @@ VkPhysicalDevice pick_vulkan_physical_device(std::span<VkPhysicalDevice> availab
 
     for (auto &&device : available_devices)
     {
+        VkPhysicalDeviceVulkan12Features features12{};
+        features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+
         VkPhysicalDeviceVulkan13Features features_vulkan13{};
         features_vulkan13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+        features_vulkan13.pNext = &features12;
 
         VkPhysicalDeviceFeatures2 features2{};
         features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
@@ -44,14 +48,12 @@ VkPhysicalDevice pick_vulkan_physical_device(std::span<VkPhysicalDevice> availab
 
         vkGetPhysicalDeviceFeatures2(device, &features2);
 
-        if (features_vulkan13.dynamicRendering)
+        if (features_vulkan13.dynamicRendering && features12.bufferDeviceAddress)
             physical_device = device;
     }
 
     if (physical_device == VK_NULL_HANDLE)
-    {
         throw std::runtime_error("Could not find suitable vulkan device");
-    }
 
     return physical_device;
 }
