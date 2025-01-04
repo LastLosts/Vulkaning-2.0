@@ -9,7 +9,7 @@ RenderFrames::RenderFrames(const VulkanCore &core, const Window &window)
       m_draw_image{core, VkExtent2D(window.width(), window.height()),
                    VkImageUsageFlags(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
                                      VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT),
-                   VMA_MEMORY_USAGE_GPU_ONLY}
+                   VMA_MEMORY_USAGE_GPU_ONLY, draw_image_format}
 {
     vkGetDeviceQueue(m_device, core.graphics_queue_family(), 0, &m_graphics_queue);
 
@@ -23,6 +23,12 @@ RenderFrames::RenderFrames(const VulkanCore &core, const Window &window)
         frame.render_finished_semaphore = create_vulkan_semaphore(m_device);
         frame.render_fence = create_vulkan_fence(m_device, true);
     }
+
+    m_immediate_pool = create_vulkan_command_pool(core.device(), core.graphics_queue_family(),
+                                                  VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+    std::vector<VkCommandBuffer> buffers = allocate_vulkan_command_buffers(core.device(), m_immediate_pool, 1);
+    m_immediate_commands = buffers[0];
+    m_immediate_fence = create_vulkan_fence(core.device(), false);
 }
 RenderFrames::~RenderFrames()
 {
@@ -34,6 +40,9 @@ RenderFrames::~RenderFrames()
         vkDestroySemaphore(m_device, frame.image_acquired_semaphore, nullptr);
         vkDestroySemaphore(m_device, frame.render_finished_semaphore, nullptr);
     }
+
+    vkDestroyCommandPool(m_device, m_immediate_pool, nullptr);
+    vkDestroyFence(m_device, m_immediate_fence, nullptr);
 }
 RenderFrames::FrameInfo RenderFrames::begin_frame()
 {
@@ -96,4 +105,32 @@ void RenderFrames::end_frame()
     ++m_frame_number;
 }
 
+void RenderFrames::immediate_submit(std::function<void(VkCommandBuffer cmd)> &&func)
+{
+    VkCommandBuffer cmd = m_immediate_commands;
+
+    vkResetFences(m_device, 1, &m_immediate_fence);
+    vkResetCommandBuffer(cmd, 0);
+
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(cmd, &begin_info);
+    func(cmd);
+    vkEndCommandBuffer(cmd);
+
+    VkCommandBufferSubmitInfo cmd_info{};
+    cmd_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+    cmd_info.commandBuffer = cmd;
+
+    VkSubmitInfo2 submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+    submit.commandBufferInfoCount = 1;
+    submit.pCommandBufferInfos = &cmd_info;
+
+    vkQueueSubmit2(m_graphics_queue, 1, &submit, m_immediate_fence);
+
+    vkWaitForFences(m_device, 1, &m_immediate_fence, VK_TRUE, 1000000000);
+}
 } // namespace ving

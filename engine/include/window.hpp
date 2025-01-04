@@ -22,6 +22,7 @@ class Window
     [[nodiscard]] uint32_t height() const noexcept { return m_height; }
     [[nodiscard]] uint32_t width() const noexcept { return m_width; }
     [[nodiscard]] VkSurfaceKHR vulkan_surface() const { return m_surface; }
+    [[nodiscard]] SDL_Window *window() const { return m_window; }
 
   private:
     VkInstance m_instance;

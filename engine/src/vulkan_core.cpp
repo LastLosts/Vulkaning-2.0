@@ -61,7 +61,7 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
     }
     if (!supported)
     {
-        throw std::runtime_error("Failed to find suitable present queue");
+        throw std::runtime_error("Failed to find present queue");
     }
 
     std::vector<uint32_t> queue_families{m_graphics_queue_family, transfer_queue_family, m_present_queue_family};

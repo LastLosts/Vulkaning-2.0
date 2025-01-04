@@ -23,6 +23,8 @@ class Swapchain
     void transition_swapchain_image_to_present(VkCommandBuffer cmd, uint32_t aqcuired_image_index);
     void present_image(VkSemaphore wait_semaphore, uint32_t acquire_image_index);
 
+    static constexpr VkFormat image_format = VK_FORMAT_B8G8R8A8_UNORM;
+
   private:
     VkDevice m_device;
 

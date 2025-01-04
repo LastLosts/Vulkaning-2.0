@@ -8,7 +8,7 @@ class Texture2D
 {
   public:
     Texture2D::Texture2D(const VulkanCore &core, VkExtent2D extent, VkImageUsageFlags image_usage,
-                         VmaMemoryUsage memory_usage, VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT,
+                         VmaMemoryUsage memory_usage, VkFormat format,
                          VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED);
     ~Texture2D();
 

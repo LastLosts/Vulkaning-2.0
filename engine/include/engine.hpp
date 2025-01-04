@@ -1,5 +1,6 @@
 #pragma once
 
+#include "imgui_renderer.hpp"
 #include "render_frames.hpp"
 #include "vulkan_core.hpp"
 #include "vulkan_instance.hpp"
@@ -23,6 +24,11 @@ class Engine
     Window m_window;
     VulkanCore m_core;
     RenderFrames m_render_frames;
+
+    ImGuiRenderer m_imgui_renderer;
+
+    float m_time;
+    float m_delta_time;
 };
 
 } // namespace ving

@@ -1,6 +1,6 @@
 #include "vulkan_utils.hpp"
 #include <cassert>
-#include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
@@ -227,6 +227,34 @@ VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat fo
 
     return view;
 }
+VkShaderModule load_vulkan_shader_module(VkDevice device, std::string_view file_path)
+{
+    std::ifstream file(file_path.data(), std::ios::ate | std::ios::binary);
+
+    if (!file.is_open())
+        throw std::runtime_error("Failed to open shader file. Do proper error handling.");
+
+    size_t file_size = static_cast<size_t>(file.tellg());
+
+    std::vector<uint32_t> buffer(file_size / sizeof(uint32_t));
+    file.seekg(0);
+
+    file.read(reinterpret_cast<char *>(buffer.data()), file_size);
+
+    file.close();
+
+    VkShaderModuleCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    info.codeSize = buffer.size() * sizeof(uint32_t);
+    info.pCode = buffer.data();
+
+    VkShaderModule shader{};
+
+    if (vkCreateShaderModule(device, &info, nullptr, &shader) != VK_SUCCESS)
+        throw std::runtime_error("Failed to create shader module. Do proper error handling.");
+
+    return shader;
+}
 void transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout current_layout, VkImageLayout new_layout)
 {
     VkImageSubresourceRange subresource_range{};
@@ -290,5 +318,4 @@ void copy_image_to_image(VkCommandBuffer cmd, VkImage source, VkImage destinatio
 
     vkCmdBlitImage2(cmd, &info);
 }
-
 } // namespace ving

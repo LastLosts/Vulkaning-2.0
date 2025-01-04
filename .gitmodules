@@ -4,3 +4,6 @@
 [submodule "engine/dependencies/VulkanMemoryAllocator"]
 	path = engine/dependencies/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+[submodule "engine/dependencies/imgui"]
+	path = engine/dependencies/imgui
+	url = https://github.com/ocornut/imgui
