@@ -51,25 +51,27 @@ ImGuiRenderer::ImGuiRenderer(const VulkanCore &core, const Window &window, const
     init_info.PipelineRenderingCreateInfo = VkPipelineRenderingCreateInfoKHR{};
     init_info.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &Swapchain::image_format;
+    init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &RenderFrames::draw_image_format;
 
     ImGui_ImplVulkan_Init(&init_info);
 
     ImGui_ImplVulkan_CreateFontsTexture();
-    ImGui_ImplVulkan_DestroyFontsTexture();
-
-    ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
 }
 ImGuiRenderer::~ImGuiRenderer()
 {
+    vkDeviceWaitIdle(m_device);
+
     ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
     vkDestroyDescriptorPool(m_device, m_pool, nullptr);
 }
 
 void ImGuiRenderer::render(const RenderFrames::FrameInfo &frame,
                            const std::vector<std::function<void()>> &imgui_functions)
 {
+    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 
     for (auto &&func : imgui_functions)
@@ -94,6 +96,8 @@ void ImGuiRenderer::render(const RenderFrames::FrameInfo &frame,
     render_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
     render_info.layerCount = 1;
     render_info.renderArea = VkRect2D{VkOffset2D{0, 0}, frame.draw_img->extent()};
+    render_info.colorAttachmentCount = 1;
+    render_info.pColorAttachments = &color_attachment;
 
     frame.draw_img->transition_layout(cmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     vkCmdBeginRendering(cmd, &render_info);

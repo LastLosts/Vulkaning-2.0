@@ -1,5 +1,6 @@
 #include "engine.hpp"
 #include "SDL3/SDL_events.h"
+#include "backends/imgui_impl_sdl3.h"
 #include <vulkan/vulkan_core.h>
 
 #include <chrono>
@@ -8,7 +9,7 @@ namespace ving
 {
 
 Engine::Engine()
-    : m_window{m_instance, 400, 400}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window},
+    : m_window{m_instance, 1280, 720}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window},
       m_imgui_renderer{m_core, m_window, m_render_frames}
 {
 }
@@ -26,6 +27,8 @@ void Engine::update()
     {
         if (event.type == SDL_EVENT_QUIT)
             m_running = false;
+
+        ImGui_ImplSDL3_ProcessEvent(&event);
     }
     RenderFrames::FrameInfo frame = m_render_frames.begin_frame();
     VkCommandBuffer cmd = frame.cmd;
@@ -43,6 +46,11 @@ void Engine::update()
     subresource_range.layerCount = VK_REMAINING_ARRAY_LAYERS;
 
     vkCmdClearColorImage(cmd, draw_img.image(), draw_img.layout(), &clear_val, 1, &subresource_range);
+
+    m_imgui_renderer.render(frame, {
+                                       []() { ImGui::ShowDemoWindow(); },
+                                   });
+
     draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
     m_render_frames.end_frame();
