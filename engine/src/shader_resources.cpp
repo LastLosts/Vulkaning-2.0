@@ -1,11 +1,23 @@
 #include "shader_resources.hpp"
+#include <cassert>
 #include <stdexcept>
+#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
+ShaderResources::ShaderResources() : m_device{VK_NULL_HANDLE}, m_pool{VK_NULL_HANDLE}
+{
+}
 ShaderResources::ShaderResources(VkDevice device, std::span<ShaderBindingSet> sets, VkShaderStageFlags stage)
     : m_device{device}
 {
+    m_shader_sets.reserve(sets.size());
+
+    for (auto &&set : sets)
+    {
+        m_shader_sets.push_back(set);
+    }
+
     m_layouts.reserve(sets.size());
 
     std::vector<VkDescriptorPoolSize> sizes{};
@@ -30,6 +42,8 @@ ShaderResources::ShaderResources(VkDevice device, std::span<ShaderBindingSet> se
 
         if (vkCreateDescriptorSetLayout(m_device, &layout_info, nullptr, &layout) != VK_SUCCESS)
             throw std::runtime_error("Failed to create descriptor set layout");
+
+        assert(layout != VK_NULL_HANDLE);
 
         m_layouts.push_back(layout);
     }
@@ -57,8 +71,26 @@ ShaderResources::~ShaderResources()
 {
     for (auto &&layout : m_layouts)
     {
-        vkDestroyDescriptorSetLayout(m_device, layout, nullptr);
+        if (layout != VK_NULL_HANDLE)
+            vkDestroyDescriptorSetLayout(m_device, layout, nullptr);
     }
-    vkDestroyDescriptorPool(m_device, m_pool, nullptr);
+    if (m_pool != VK_NULL_HANDLE)
+        vkDestroyDescriptorPool(m_device, m_pool, nullptr);
+}
+void ShaderResources::write_image(uint32_t set, uint32_t binding, const Texture2D &image, VkImageLayout expected_layout)
+{
+    VkDescriptorImageInfo image_info{};
+    image_info.imageView = image.view();
+    image_info.imageLayout = expected_layout;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = m_sets[set];
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.descriptorType = m_shader_sets[set].bindings[binding].type;
+    write.pImageInfo = &image_info;
+
+    vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
 }
 } // namespace ving

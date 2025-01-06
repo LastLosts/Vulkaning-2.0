@@ -23,7 +23,7 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
 VkImage create_vulkan_image(VkDevice device, VkFormat format, VkExtent3D extent, VkImageUsageFlags usage,
                             VkImageType type = VK_IMAGE_TYPE_2D);
 VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat format);
-VkShaderModule load_vulkan_shader_module(VkDevice device, std::string_view file_path);
+VkShaderModule load_vulkan_shader_module(VkDevice device, const char *file_path);
 
 // Images
 void transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout current_layout, VkImageLayout new_layout);

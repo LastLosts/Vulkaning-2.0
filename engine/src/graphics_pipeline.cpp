@@ -18,8 +18,8 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_info.pushConstantRangeCount = 1;
     layout_info.pPushConstantRanges = &push_constant_range;
-    layout_info.setLayoutCount = resources.layouts().size();
-    layout_info.pSetLayouts = resources.layouts().data();
+    layout_info.setLayoutCount = resources.layouts_size();
+    layout_info.pSetLayouts = resources.layouts();
 
     if (vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_layout) != VK_SUCCESS)
         throw std::runtime_error("Failed to create pipeline layout. Do proper error handling");
@@ -110,5 +110,10 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
 
     if (vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline) != VK_SUCCESS)
         throw std::runtime_error("Failed to create graphics pipeline. Do proper error handling");
+}
+GraphicsPipline::~GraphicsPipline()
+{
+    vkDestroyPipeline(m_device, m_pipeline, nullptr);
+    vkDestroyPipelineLayout(m_device, m_layout, nullptr);
 }
 } // namespace ving

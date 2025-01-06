@@ -1,6 +1,9 @@
 #include "vulkan_utils.hpp"
 #include <cassert>
+#include <filesystem>
+#include <format>
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
@@ -227,12 +230,18 @@ VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat fo
 
     return view;
 }
-VkShaderModule load_vulkan_shader_module(VkDevice device, std::string_view file_path)
+VkShaderModule load_vulkan_shader_module(VkDevice device, const char *file_path)
 {
-    std::ifstream file(file_path.data(), std::ios::ate | std::ios::binary);
+    std::ifstream file(file_path, std::ios::ate | std::ios::binary);
+
+    std::filesystem::path shader_path{file_path};
 
     if (!file.is_open())
+    {
+        printf("%s\n", shader_path.parent_path().c_str());
+
         throw std::runtime_error("Failed to open shader file. Do proper error handling.");
+    }
 
     size_t file_size = static_cast<size_t>(file.tellg());
 

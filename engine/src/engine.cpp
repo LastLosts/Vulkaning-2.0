@@ -10,7 +10,7 @@ namespace ving
 
 Engine::Engine()
     : m_window{m_instance, 1280, 720}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window},
-      m_imgui_renderer{m_core, m_window, m_render_frames}
+      m_imgui_renderer{m_core, m_window, m_render_frames}, m_slime_renderer{m_core}
 {
 }
 void Engine::run()
@@ -34,22 +34,25 @@ void Engine::update()
     VkCommandBuffer cmd = frame.cmd;
     Texture2D &draw_img = *frame.draw_img;
 
-    draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_GENERAL);
+    /*draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_GENERAL);*/
 
-    VkClearColorValue clear_val = {{0.0f, 0.0f, (std::sin(m_time * 0.001f) + 1.0f) / 2.0f, 1.0f}};
+    /*VkClearColorValue clear_val = {{0.12f, 0.12f, 0.12f, 1.0f}};*/
+    /**/
+    /*VkImageSubresourceRange subresource_range{};*/
+    /*subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;*/
+    /*subresource_range.baseMipLevel = 0;*/
+    /*subresource_range.levelCount = VK_REMAINING_MIP_LEVELS;*/
+    /*subresource_range.baseArrayLayer = 0;*/
+    /*subresource_range.layerCount = VK_REMAINING_ARRAY_LAYERS;*/
+    /**/
+    /*vkCmdClearColorImage(cmd, draw_img.image(), draw_img.layout(), &clear_val, 1, &subresource_range);*/
 
-    VkImageSubresourceRange subresource_range{};
-    subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresource_range.baseMipLevel = 0;
-    subresource_range.levelCount = VK_REMAINING_MIP_LEVELS;
-    subresource_range.baseArrayLayer = 0;
-    subresource_range.layerCount = VK_REMAINING_ARRAY_LAYERS;
-
-    vkCmdClearColorImage(cmd, draw_img.image(), draw_img.layout(), &clear_val, 1, &subresource_range);
-
-    m_imgui_renderer.render(frame, {
-                                       []() { ImGui::ShowDemoWindow(); },
-                                   });
+    m_imgui_renderer.render(frame, {[this]() {
+                                ImGui::ShowDemoWindow();
+                                ImGui::Text("FPS: %.0f", 1.0f / (m_delta_time / 1000.0f));
+                                ImGui::Text("Delta Time: %fms", m_delta_time);
+                            }});
+    m_slime_renderer.render(frame);
 
     draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 

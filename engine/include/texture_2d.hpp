@@ -7,9 +7,8 @@ namespace ving
 class Texture2D
 {
   public:
-    Texture2D::Texture2D(const VulkanCore &core, VkExtent2D extent, VkImageUsageFlags image_usage,
-                         VmaMemoryUsage memory_usage, VkFormat format,
-                         VkImageLayout initial_layout = VK_IMAGE_LAYOUT_UNDEFINED);
+    Texture2D(const VulkanCore &core, VkExtent2D extent, VkImageUsageFlags image_usage, VmaMemoryUsage memory_usage,
+              VkFormat format);
     ~Texture2D();
 
     [[nodiscard]] VkExtent2D extent() const noexcept { return m_extent; }

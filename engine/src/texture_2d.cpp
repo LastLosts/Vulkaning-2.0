@@ -5,11 +5,10 @@
 namespace ving
 {
 Texture2D::Texture2D(const VulkanCore &core, VkExtent2D extent, VkImageUsageFlags image_usage,
-                     VmaMemoryUsage memory_usage, VkFormat format, VkImageLayout initial_layout)
-    : m_device{core.device()}, m_allocator{core.allocator()}, m_layout{initial_layout}
+                     VmaMemoryUsage memory_usage, VkFormat format)
+    : m_device{core.device()}, m_allocator{core.allocator()}, m_layout{VK_IMAGE_LAYOUT_UNDEFINED}, m_extent{extent},
+      m_format{format}
 {
-    m_extent = extent;
-    m_format = format;
 
     VmaAllocationCreateInfo alloc_info{};
     alloc_info.usage = memory_usage;
@@ -37,8 +36,11 @@ Texture2D::~Texture2D()
 }
 void Texture2D::transition_layout(VkCommandBuffer cmd, VkImageLayout new_layout)
 {
-    transition_image(cmd, m_image, m_layout, new_layout);
-    m_layout = new_layout;
+    if (new_layout != m_layout)
+    {
+        transition_image(cmd, m_image, m_layout, new_layout);
+        m_layout = new_layout;
+    }
 }
 
 } // namespace ving

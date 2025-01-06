@@ -2,6 +2,7 @@
 
 #include "imgui_renderer.hpp"
 #include "render_frames.hpp"
+#include "slime_renderer.hpp"
 #include "vulkan_core.hpp"
 #include "vulkan_instance.hpp"
 #include "window.hpp"
@@ -25,6 +26,7 @@ class Engine
     VulkanCore m_core;
     RenderFrames m_render_frames;
 
+    SlimeRenderer m_slime_renderer;
     ImGuiRenderer m_imgui_renderer;
 
     float m_time;

@@ -11,6 +11,7 @@ class GraphicsPipline
   public:
     GraphicsPipline(const VulkanCore &core, const ShaderResources &resources, uint32_t push_constant_size,
                     VkShaderModule vertex_shader, VkShaderModule fragment_shader);
+    ~GraphicsPipline();
 
   private:
     VkDevice m_device;
