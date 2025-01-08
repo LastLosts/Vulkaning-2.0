@@ -1,24 +1,49 @@
 #version 450
 
-layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = 1, local_size_y = 1) in;
 
 layout(rgba16f, set = 0, binding = 0) uniform image2D image;
+struct Agent
+{
+    float x;
+    float y;
+    float angle;
+    float dummy;
+};
+layout(std140, set = 0, binding = 1) buffer AgentsBuffer
+{
+    Agent agents[];
+};
+
+const float movement_speed = 0.0007;
 
 void main()
 {
-    ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
-    ivec2 size = imageSize(image);
+    uint agent_index = uint(gl_GlobalInvocationID.x);
+    Agent current_agent = agents[agent_index];
+    ivec2 image_size = imageSize(image);
 
-    if (texel_coord.x < size.x && texel_coord.y < size.y)
+    ivec2 agent_image_coord = ivec2(current_agent.x * 1280.0, current_agent.y * 720.0);
+
+    if (agent_image_coord.x < image_size.x && agent_image_coord.y < image_size.y)
     {
-        vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
+        vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
+        // color = color * float(agent_index / 1000.0);
 
-        if (gl_LocalInvocationID.x != 0 && gl_LocalInvocationID.y != 0)
-        {
-            color.x = float(texel_coord.x)/(size.x);
-            color.y = float(texel_coord.y)/(size.y);
-        }
-
-        imageStore(image, texel_coord, color);
+        imageStore(image, agent_image_coord, color);
     }
+
+    // TODO: Delta time
+    float new_pos_x = current_agent.x + cos(current_agent.angle) * movement_speed;
+    float new_pos_y = current_agent.y + sin(current_agent.angle) * movement_speed;
+
+    if (new_pos_x < 0 || new_pos_x > 1.0 || new_pos_y < 0 || new_pos_y > 1.0)
+    {
+        new_pos_x = 0.5;
+        new_pos_y = 0.5;
+        agents[agent_index].angle = -agents[agent_index].angle;
+    }
+
+    agents[agent_index].x = new_pos_x;
+    agents[agent_index].y = new_pos_y;
 }

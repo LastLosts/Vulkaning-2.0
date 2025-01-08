@@ -1,0 +1,51 @@
+#version 450
+
+layout (local_size_x = 16, local_size_y = 16) in;
+
+layout (rgba16f, set = 0, binding = 0) uniform image2D image;
+
+// TODO: Use unifrom buffer for this
+const vec4 agent_color = vec4(1.0, 1.0, 1.0, 1.0);
+const float diffuse_speed = 0.07;
+const float evaporation_speed = 0.0014;
+
+void main()
+{
+    ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 image_size = imageSize(image);
+   
+    vec4 sum = vec4(0.0);
+
+    if (texel_coord.x < image_size.x && texel_coord.y < image_size.y)
+    {
+        vec4 orig_color = imageLoad(image, texel_coord);
+
+        vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);
+
+        for (int offset_x = -1; offset_x <= 1; offset_x++)
+        {
+            for (int offset_y = -1; offset_y <= 1; offset_y++)
+            {
+                int sample_x = texel_coord.x + offset_x;
+                int sample_y = texel_coord.y + offset_y;
+
+                if (sample_x >= 0 && sample_x < image_size.x && sample_y >= 0 && sample_y < image_size.y)
+                {
+                    sum += imageLoad(image, ivec2(sample_x, sample_y));
+                }
+            }
+        }
+        vec4 diffusion_result = sum / 9.0;
+
+        // TODO: add delta time so when more fps doesn't diffuse and fade faster
+        vec4 diffuse_value = mix(orig_color, diffusion_result, diffuse_speed);
+
+        float fade_r = max(0.0, diffuse_value.x - evaporation_speed);
+        float fade_g = max(0.0, diffuse_value.y - evaporation_speed);
+        float fade_b = max(0.0, diffuse_value.z - evaporation_speed);
+
+        vec4 diffuse_and_fade_color = vec4(fade_r, fade_g, fade_b, 1.0);
+
+        imageStore(image, texel_coord, diffuse_and_fade_color);
+    }
+}

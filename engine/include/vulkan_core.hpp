@@ -3,6 +3,7 @@
 #include "vk_mem_alloc.h"
 #include "window.hpp"
 #include <format>
+#include <functional>
 #include <stdexcept>
 
 namespace ving
@@ -33,6 +34,8 @@ class VulkanCore
     [[nodiscard]] VkPhysicalDevice physical_device() const noexcept { return m_physical_device; }
     [[nodiscard]] VmaAllocator allocator() const noexcept { return m_allocator; }
 
+    void immediate_transfer(std::function<void(VkCommandBuffer cmd)> &&func) const;
+
   private:
     VkInstance m_instance;
     VkPhysicalDevice m_physical_device;
@@ -41,5 +44,10 @@ class VulkanCore
 
     uint32_t m_graphics_queue_family;
     uint32_t m_present_queue_family;
+
+    VkQueue m_transfer_queue;
+    VkCommandPool m_immediate_transfer_pool;
+    VkCommandBuffer m_immediate_transfer_commands;
+    VkFence m_immediate_transfer_fence;
 };
 } // namespace ving

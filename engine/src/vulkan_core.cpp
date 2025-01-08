@@ -1,3 +1,4 @@
+#include <vulkan/vulkan_core.h>
 #define VMA_IMPLEMENTATION
 #include "vulkan_core.hpp"
 
@@ -89,10 +90,48 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
     allocator_info.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 
     vmaCreateAllocator(&allocator_info, &m_allocator);
+
+    vkGetDeviceQueue(m_device, transfer_queue_family, 0, &m_transfer_queue);
+    m_immediate_transfer_pool =
+        create_vulkan_command_pool(m_device, transfer_queue_family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+    std::vector<VkCommandBuffer> buffers = allocate_vulkan_command_buffers(m_device, m_immediate_transfer_pool, 1);
+    m_immediate_transfer_commands = buffers[0];
+    m_immediate_transfer_fence = create_vulkan_fence(m_device, false);
 }
 VulkanCore::~VulkanCore()
 {
+    vkDestroyCommandPool(m_device, m_immediate_transfer_pool, nullptr);
+    vkDestroyFence(m_device, m_immediate_transfer_fence, nullptr);
+
     vmaDestroyAllocator(m_allocator);
     vkDestroyDevice(m_device, nullptr);
+}
+void VulkanCore::immediate_transfer(std::function<void(VkCommandBuffer cmd)> &&func) const
+{
+    VkCommandBuffer cmd = m_immediate_transfer_commands;
+
+    vkResetFences(m_device, 1, &m_immediate_transfer_fence);
+    vkResetCommandBuffer(cmd, 0);
+
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(cmd, &begin_info);
+    func(cmd);
+    vkEndCommandBuffer(cmd);
+
+    VkCommandBufferSubmitInfo cmd_info{};
+    cmd_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
+    cmd_info.commandBuffer = cmd;
+
+    VkSubmitInfo2 submit{};
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
+    submit.commandBufferInfoCount = 1;
+    submit.pCommandBufferInfos = &cmd_info;
+
+    vkQueueSubmit2(m_transfer_queue, 1, &submit, m_immediate_transfer_fence);
+
+    vkWaitForFences(m_device, 1, &m_immediate_transfer_fence, VK_TRUE, 1000000000);
 }
 } // namespace ving

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gpu_buffer.hpp"
 #include "texture_2d.hpp"
 #include <span>
 #include <string>
@@ -15,7 +16,6 @@ struct ShaderBinding
 };
 struct ShaderBindingSet
 {
-    std::string name;
     std::vector<ShaderBinding> bindings;
 };
 class ShaderResources
@@ -46,6 +46,7 @@ class ShaderResources
     [[nodiscard]] size_t sets_size() const noexcept { return m_sets.size(); }
 
     void write_image(uint32_t set, uint32_t binding, const Texture2D &image, VkImageLayout expected_layout);
+    void write_buffer(uint32_t set, uint32_t binding, const GPUBuffer &buffer);
 
   private:
     VkDevice m_device;

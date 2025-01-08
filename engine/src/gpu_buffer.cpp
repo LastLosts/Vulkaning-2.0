@@ -1,5 +1,7 @@
 #include "gpu_buffer.hpp"
 #include "vulkan_core.hpp"
+#include <cassert>
+#include <cstring>
 
 namespace ving
 {
@@ -23,6 +25,16 @@ GPUBuffer::GPUBuffer(const VulkanCore &core, size_t allocation_size, VkBufferUsa
 GPUBuffer::~GPUBuffer()
 {
     vmaDestroyBuffer(m_allocator, m_buffer, m_allocation);
+}
+void GPUBuffer::set_memory(void *data, uint32_t size)
+{
+    assert(m_allocation_info.size >= size);
+    void *buffer_data;
+    vmaMapMemory(m_allocator, m_allocation, &buffer_data);
+
+    memcpy(buffer_data, data, size);
+
+    vmaUnmapMemory(m_allocator, m_allocation);
 }
 
 } // namespace ving

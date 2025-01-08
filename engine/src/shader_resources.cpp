@@ -93,4 +93,21 @@ void ShaderResources::write_image(uint32_t set, uint32_t binding, const Texture2
 
     vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
 }
+void ShaderResources::write_buffer(uint32_t set, uint32_t binding, const GPUBuffer &buffer)
+{
+    VkDescriptorBufferInfo buffer_info{};
+    buffer_info.buffer = buffer.buffer();
+    buffer_info.offset = 0;
+    buffer_info.range = buffer.size();
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = m_sets[set];
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.descriptorType = m_shader_sets[set].bindings[binding].type;
+    write.pBufferInfo = &buffer_info;
+
+    vkUpdateDescriptorSets(m_device, 1, &write, 0, nullptr);
+}
 } // namespace ving
