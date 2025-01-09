@@ -15,13 +15,68 @@ layout(std140, set = 0, binding = 1) buffer AgentsBuffer
     Agent agents[];
 };
 
-const float movement_speed = 0.0007;
+layout (push_constant) uniform constants
+{
+    float time;
+    float delta_time;
+} pc;
+
+const float movement_speed = 0.07;
+const float pi = 3.14159265359;
+const int sensor_distance = 10;
+const int sensor_size = 5;
+const float sensor_angle_spacing = 0.25 * pi;
+const float offset_size =  0.0001;
+const float turn_speed = 0.4;
+
+ivec2 image_size;
+
+uint hash(uint seed)
+{
+    seed ^= 2747636419u;
+    seed *= 2654435769u;
+    seed ^= seed >> 16;
+    seed *= 2654435769u;
+    seed ^= seed >> 16;
+    seed *= 2654435769u;
+    return seed;
+}
+
+float random_float(uint seed)
+{
+    return float(hash(seed)) / 4294967295.0;
+}
+
+float get_pheromone_strength(Agent agent, float sensor_angle_offset)
+{
+    ivec2 agent_pos = ivec2(agent.x * 1280.0, agent.y * 720.0);
+    vec2 sensor_direction = vec2(cos(agent.angle + sensor_angle_offset), sin(agent.angle + sensor_angle_offset));
+    ivec2 sensor_pos = ivec2(agent_pos + sensor_direction * sensor_distance);
+    float sum = 0;
+
+    for (int offset_x = -sensor_size; offset_x <= sensor_size; offset_x++)
+    {
+        for (int offset_y = -sensor_size; offset_y <= sensor_size; offset_y++)
+        {
+            if (sensor_pos.x + offset_x < image_size.x && 
+                sensor_pos.y + offset_y < image_size.y &&
+                sensor_pos.x + offset_x >= 0 &&
+                sensor_pos.y + offset_y >= 0)
+            {
+                // TODO: For multiple colors
+                sum += imageLoad(image, ivec2(sensor_pos.x + offset_x, sensor_pos.y + offset_y)).x;
+            }
+        }
+    }
+
+    return sum;
+}
 
 void main()
 {
     uint agent_index = uint(gl_GlobalInvocationID.x);
     Agent current_agent = agents[agent_index];
-    ivec2 image_size = imageSize(image);
+    image_size = imageSize(image);
 
     ivec2 agent_image_coord = ivec2(current_agent.x * 1280.0, current_agent.y * 720.0);
 
@@ -32,17 +87,41 @@ void main()
 
         imageStore(image, agent_image_coord, color);
     }
+    
+    float forward = get_pheromone_strength(current_agent, 0.0);
+    float left = get_pheromone_strength(current_agent, sensor_angle_spacing);
+    float right = get_pheromone_strength(current_agent, -sensor_angle_spacing);
+
+    float random_rotate = random_float(uint(pc.time * hash(agent_index)));
+
+    if (forward > left && forward > right)
+    {
+        agents[agent_index].angle += 0;
+    }
+    if (forward < left && forward < right)
+    {
+        agents[agent_index].angle += (random_rotate - 0.5) * 2 * turn_speed * pc.delta_time;
+    }
+    else if(right > left)
+    {
+        agents[agent_index].angle -= random_rotate * turn_speed * pc.delta_time;
+    }
+    else if(left > right)
+    {
+        agents[agent_index].angle += random_rotate * turn_speed * pc.delta_time;
+    }
 
     // TODO: Delta time
-    float new_pos_x = current_agent.x + cos(current_agent.angle) * movement_speed;
-    float new_pos_y = current_agent.y + sin(current_agent.angle) * movement_speed;
+    float new_pos_x = current_agent.x + cos(current_agent.angle) * movement_speed * pc.delta_time;
+    float new_pos_y = current_agent.y + sin(current_agent.angle) * movement_speed * pc.delta_time;
 
     if (new_pos_x < 0 || new_pos_x > 1.0 || new_pos_y < 0 || new_pos_y > 1.0)
     {
-        new_pos_x = 0.5;
-        new_pos_y = 0.5;
-        agents[agent_index].angle = -agents[agent_index].angle;
+        agents[agent_index].angle = random_float(agent_index * int(pc.time)) * 2 * pi;
     }
+
+    new_pos_x = clamp(new_pos_x, 0, 1.0);
+    new_pos_y = clamp(new_pos_y, 0, 1.0);
 
     agents[agent_index].x = new_pos_x;
     agents[agent_index].y = new_pos_y;

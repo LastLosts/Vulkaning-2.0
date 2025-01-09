@@ -17,6 +17,8 @@ SlimeRenderer::SlimeRenderer(const VulkanCore &core)
       m_agents_buffer{core, sizeof(Agent) * agent_count,
                       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY}
 {
+    m_agents.resize(agent_count);
+
     std::default_random_engine gen;
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::uniform_real_distribution<float> angle_dist(0.0f, std::numbers::pi * 2);
@@ -62,14 +64,17 @@ SlimeRenderer::SlimeRenderer(const VulkanCore &core)
         vkCmdCopyBuffer(cmd, staging_buffer.buffer(), m_agents_buffer.buffer(), 1, &copy);
     });
 
-    m_fade_diffuse_pipeline = ComputePipeline{core, m_resources, fade_diffuse_shader};
-    m_agent_update_pipeline = ComputePipeline{core, m_resources, update_slime_shader};
+    m_fade_diffuse_pipeline = ComputePipeline{core, m_resources, sizeof(PushConstants), fade_diffuse_shader};
+    m_agent_update_pipeline = ComputePipeline{core, m_resources, sizeof(PushConstants), update_slime_shader};
 
     vkDestroyShaderModule(core.device(), update_slime_shader, nullptr);
     vkDestroyShaderModule(core.device(), fade_diffuse_shader, nullptr);
 }
-void SlimeRenderer::render(const RenderFrames::FrameInfo &frame)
+void SlimeRenderer::render(const RenderFrames::FrameInfo &frame, float time, float delta_time)
 {
+    m_push_constants.time = time;
+    m_push_constants.delta_time = delta_time;
+
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_image = frame.draw_img;
 
@@ -78,11 +83,15 @@ void SlimeRenderer::render(const RenderFrames::FrameInfo &frame)
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_agent_update_pipeline.pipeline());
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_agent_update_pipeline.layout(), 0,
                             m_resources.sets_size(), m_resources.sets(), 0, nullptr);
+    vkCmdPushConstants(cmd, m_agent_update_pipeline.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants),
+                       &m_push_constants);
     vkCmdDispatch(cmd, agent_count, 1, 1);
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_fade_diffuse_pipeline.pipeline());
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_fade_diffuse_pipeline.layout(), 0,
                             m_resources.sets_size(), m_resources.sets(), 0, nullptr);
+    vkCmdPushConstants(cmd, m_fade_diffuse_pipeline.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants),
+                       &m_push_constants);
     vkCmdDispatch(cmd, std::ceil(1280.0f / 16.0f), std::ceil(720.0f / 16.0f), 1);
 
     draw_image->transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);

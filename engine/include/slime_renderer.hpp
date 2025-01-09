@@ -19,17 +19,24 @@ class SlimeRenderer
         float angle;
         float dummy;
     };
+    struct PushConstants
+    {
+        float time;
+        float delta_time;
+    };
 
   public:
     SlimeRenderer(const VulkanCore &core);
 
-    void render(const RenderFrames::FrameInfo &frame);
+    void render(const RenderFrames::FrameInfo &frame, float time, float delta_time);
 
-    static constexpr uint32_t agent_count = 1000;
+    static constexpr uint32_t agent_count = 100000;
 
   private:
+    PushConstants m_push_constants;
+
     Texture2D m_slime_img;
-    std::array<Agent, agent_count> m_agents;
+    std::vector<Agent> m_agents;
     GPUBuffer m_agents_buffer;
 
     ShaderResources m_resources;

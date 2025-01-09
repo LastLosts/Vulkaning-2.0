@@ -8,13 +8,20 @@ ComputePipeline::ComputePipeline() : m_device{VK_NULL_HANDLE}, m_pipeline{VK_NUL
 {
 }
 ComputePipeline::ComputePipeline(const VulkanCore &core, const ShaderResources &shader_resources,
-                                 VkShaderModule compute_shader)
+                                 uint32_t push_constants_size, VkShaderModule compute_shader)
     : m_device{core.device()}
 {
+    VkPushConstantRange push_constant_range{};
+    push_constant_range.size = push_constants_size;
+    push_constant_range.offset = 0;
+    push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
     VkPipelineLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_info.pSetLayouts = shader_resources.layouts();
     layout_info.setLayoutCount = shader_resources.layouts_size();
+    layout_info.pushConstantRangeCount = 1;
+    layout_info.pPushConstantRanges = &push_constant_range;
 
     if (vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_layout) != VK_SUCCESS)
         throw std::runtime_error("Failed to create compute pipeline layout. Do proper error handling.");

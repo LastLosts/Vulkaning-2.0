@@ -9,7 +9,8 @@ class ComputePipeline
 {
   public:
     ComputePipeline();
-    ComputePipeline(const VulkanCore &core, const ShaderResources &shader_resources, VkShaderModule compute_shader);
+    ComputePipeline(const VulkanCore &core, const ShaderResources &shader_resources, uint32_t push_constants_size,
+                    VkShaderModule compute_shader);
     ~ComputePipeline();
 
     ComputePipeline(const ComputePipeline &) = default;

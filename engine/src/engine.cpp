@@ -47,12 +47,12 @@ void Engine::update()
     /**/
     /*vkCmdClearColorImage(cmd, draw_img.image(), draw_img.layout(), &clear_val, 1, &subresource_range);*/
 
+    m_slime_renderer.render(frame, m_time, m_delta_time);
+
     m_imgui_renderer.render(frame, {[this]() {
-                                ImGui::ShowDemoWindow();
-                                ImGui::Text("FPS: %.0f", 1.0f / (m_delta_time / 1000.0f));
-                                ImGui::Text("Delta Time: %fms", m_delta_time);
+                                ImGui::Text("FPS: %.0f", 1.0f / m_delta_time);
+                                ImGui::Text("Delta Time: %fms", m_delta_time * 1000);
                             }});
-    m_slime_renderer.render(frame);
 
     draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
@@ -61,7 +61,7 @@ void Engine::update()
     auto end_update_time = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<float> delta = end_update_time - start_update_time;
-    m_delta_time = delta.count() * 1000.0f;
+    m_delta_time = delta.count();
     m_time += m_delta_time;
 }
 
