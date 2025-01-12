@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include "SDL3/SDL_events.h"
 #include "backends/imgui_impl_sdl3.h"
+#include "imgui.h"
 #include <vulkan/vulkan_core.h>
 
 #include <chrono>
@@ -47,12 +48,26 @@ void Engine::update()
     /**/
     /*vkCmdClearColorImage(cmd, draw_img.image(), draw_img.layout(), &clear_val, 1, &subresource_range);*/
 
+    auto start_record_render_time = std::chrono::high_resolution_clock::now();
+
     m_slime_renderer.render(frame, m_time, m_delta_time);
 
-    m_imgui_renderer.render(frame, {[this]() {
-                                ImGui::Text("FPS: %.0f", 1.0f / m_delta_time);
-                                ImGui::Text("Delta Time: %fms", m_delta_time * 1000);
-                            }});
+    m_imgui_renderer.render(
+        frame, {[this]() {
+            ImGui::Text("FPS: %.0f", 1.0f / m_delta_time);
+            ImGui::Text("Delta Time: %fms", m_delta_time * 1000);
+            ImGui::Text("Cmd record time: %fms", m_record_commands_time * 1000);
+
+            ImGui::DragFloat("Move speed", &m_slime_renderer.settings->movement_speed, 0.001f, 0.001f, 1.0f);
+            ImGui::DragFloat("Sensor angle spacing*pi", &m_slime_renderer.settings->sensor_angle_spacing, 0.01f, 0.0f,
+                             2.0f);
+            ImGui::DragFloat("Turn Speed", &m_slime_renderer.settings->turn_speed, 0.01f, 0.01f, 20.0f);
+            ImGui::DragInt("Sensor Size", &m_slime_renderer.settings->sensor_size, 1.0f, 0, 20);
+            ImGui::DragInt("Sensor Distance", &m_slime_renderer.settings->sensor_distance, 1.0f, 0, 20);
+        }});
+    auto end_record_render_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float> record_time = end_record_render_time - start_record_render_time;
+    m_record_commands_time = record_time.count();
 
     draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 

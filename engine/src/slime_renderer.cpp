@@ -1,6 +1,8 @@
 #include "slime_renderer.hpp"
 #include "utility/vulkan_utils.hpp"
 #include <cassert>
+#include <chrono>
+#include <memory>
 #include <numbers>
 #include <random>
 #include <vulkan/vulkan_core.h>
@@ -10,12 +12,13 @@ namespace ving
 
 SlimeRenderer::SlimeRenderer(const VulkanCore &core)
     : m_slime_img{core,
-                  {1280, 720},
+                  {2560, 1440},
                   VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                   VMA_MEMORY_USAGE_GPU_ONLY,
                   VK_FORMAT_R32G32B32A32_SFLOAT},
       m_agents_buffer{core, sizeof(Agent) * agent_count,
-                      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY}
+                      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY},
+      m_settings_uniform{core, sizeof(SlimeSettings), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU}
 {
     m_agents.resize(agent_count);
 
@@ -38,6 +41,7 @@ SlimeRenderer::SlimeRenderer(const VulkanCore &core)
         ShaderBindingSet{{
             {0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE},
             {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER},
+            {2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER},
         }},
     };
 
@@ -46,10 +50,6 @@ SlimeRenderer::SlimeRenderer(const VulkanCore &core)
         load_vulkan_shader_module(core.device(), "./engine/shaders/spirv/slime.comp.spv");
     VkShaderModule fade_diffuse_shader =
         load_vulkan_shader_module(core.device(), "./engine/shaders/spirv/fade_and_diffuse.comp.spv");
-
-    m_resources = ShaderResources{core.device(), sets, VK_SHADER_STAGE_COMPUTE_BIT};
-    m_resources.write_image(0, 0, m_slime_img, VK_IMAGE_LAYOUT_GENERAL);
-    m_resources.write_buffer(0, 1, m_agents_buffer);
 
     GPUBuffer staging_buffer{core, sizeof(Agent) * agent_count, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                              VMA_MEMORY_USAGE_CPU_ONLY};
@@ -63,6 +63,21 @@ SlimeRenderer::SlimeRenderer(const VulkanCore &core)
 
         vkCmdCopyBuffer(cmd, staging_buffer.buffer(), m_agents_buffer.buffer(), 1, &copy);
     });
+
+    void *data = m_settings_uniform.map_and_get_memory();
+    settings = static_cast<SlimeSettings *>(data);
+
+    settings->movement_speed = 0.05;
+    settings->sensor_distance = 10;
+    settings->sensor_size = 5;
+    settings->sensor_angle_spacing = 0.25;
+    settings->offset_size = 0.0001;
+    settings->turn_speed = 0.1;
+
+    m_resources = ShaderResources{core.device(), sets, VK_SHADER_STAGE_COMPUTE_BIT};
+    m_resources.write_image(0, 0, m_slime_img, VK_IMAGE_LAYOUT_GENERAL);
+    m_resources.write_buffer(0, 1, m_agents_buffer);
+    m_resources.write_buffer(0, 2, m_settings_uniform);
 
     m_fade_diffuse_pipeline = ComputePipeline{core, m_resources, sizeof(PushConstants), fade_diffuse_shader};
     m_agent_update_pipeline = ComputePipeline{core, m_resources, sizeof(PushConstants), update_slime_shader};
@@ -85,14 +100,15 @@ void SlimeRenderer::render(const RenderFrames::FrameInfo &frame, float time, flo
                             m_resources.sets_size(), m_resources.sets(), 0, nullptr);
     vkCmdPushConstants(cmd, m_agent_update_pipeline.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants),
                        &m_push_constants);
-    vkCmdDispatch(cmd, agent_count, 1, 1);
+    vkCmdDispatch(cmd, agent_multiplicator, 1, 1);
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_fade_diffuse_pipeline.pipeline());
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_fade_diffuse_pipeline.layout(), 0,
                             m_resources.sets_size(), m_resources.sets(), 0, nullptr);
     vkCmdPushConstants(cmd, m_fade_diffuse_pipeline.layout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants),
                        &m_push_constants);
-    vkCmdDispatch(cmd, std::ceil(1280.0f / 16.0f), std::ceil(720.0f / 16.0f), 1);
+    vkCmdDispatch(cmd, std::ceil(m_slime_img.extent().width / 16.0f), std::ceil(m_slime_img.extent().height / 16.0f),
+                  1);
 
     draw_image->transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     m_slime_img.transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);

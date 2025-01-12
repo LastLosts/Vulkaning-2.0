@@ -2,6 +2,8 @@
 #include "vulkan_core.hpp"
 #include <cassert>
 #include <cstring>
+#include <iostream>
+#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
@@ -24,15 +26,28 @@ GPUBuffer::GPUBuffer(const VulkanCore &core, size_t allocation_size, VkBufferUsa
 }
 GPUBuffer::~GPUBuffer()
 {
+    if (m_memory_mapped)
+        vmaUnmapMemory(m_allocator, m_allocation);
+
     vmaDestroyBuffer(m_allocator, m_buffer, m_allocation);
+}
+void *GPUBuffer::map_and_get_memory()
+{
+    if (vmaMapMemory(m_allocator, m_allocation, &m_mapped_memory) == VK_SUCCESS)
+    {
+        m_memory_mapped = true;
+        return m_mapped_memory;
+    }
+
+    std::cerr << "Failed to map buffer memory\n";
+    return nullptr;
 }
 void GPUBuffer::set_memory(void *data, uint32_t size)
 {
     assert(m_allocation_info.size >= size);
-    void *buffer_data;
-    vmaMapMemory(m_allocator, m_allocation, &buffer_data);
+    vmaMapMemory(m_allocator, m_allocation, &m_mapped_memory);
 
-    memcpy(buffer_data, data, size);
+    memcpy(m_mapped_memory, data, size);
 
     vmaUnmapMemory(m_allocator, m_allocation);
 }

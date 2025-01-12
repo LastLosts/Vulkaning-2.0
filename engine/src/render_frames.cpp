@@ -1,6 +1,9 @@
 #include "render_frames.hpp"
 #include "utility/vulkan_utils.hpp"
+#include <iostream>
 #include <vulkan/vulkan_core.h>
+
+#include <chrono>
 
 namespace ving
 {
@@ -49,8 +52,15 @@ RenderFrames::FrameInfo RenderFrames::begin_frame()
     FrameResources &current_frame = m_frames[m_frame_number % frames_in_flight];
     VkCommandBuffer cmd = current_frame.commands;
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     vkWaitForFences(m_device, 1, &current_frame.render_fence, VK_TRUE, 1000000000);
     vkResetFences(m_device, 1, &current_frame.render_fence);
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float> delta = end - start;
+
+    /*std::cout << "Wait for GPU to execute commands time: " << delta.count() * 1000 << "ms\n";*/
 
     m_acquired_image_index = m_swapchain.acquire_image(current_frame.image_acquired_semaphore);
 

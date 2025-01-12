@@ -28,11 +28,13 @@ class Engine
 
     SlimeRenderer m_slime_renderer;
     ImGuiRenderer m_imgui_renderer;
-    
+
     // Time in seconds from the start of a program
     float m_time;
     // Delta time in seconds
     float m_delta_time;
+
+    float m_record_commands_time;
 };
 
 } // namespace ving

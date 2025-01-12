@@ -8,6 +8,16 @@
 
 namespace ving
 {
+struct SlimeSettings
+{
+    float movement_speed = 0.05;
+    int sensor_distance = 10;
+    int sensor_size = 5;
+    float sensor_angle_spacing = 0.25;
+    float offset_size = 0.0001;
+    float turn_speed = 0.1;
+};
+
 class SlimeRenderer
 {
     struct Agent
@@ -30,7 +40,12 @@ class SlimeRenderer
 
     void render(const RenderFrames::FrameInfo &frame, float time, float delta_time);
 
-    static constexpr uint32_t agent_count = 100000;
+    // Must be multiple of 256
+    static constexpr uint32_t slime_local_dispatch = 32;
+    static constexpr uint32_t agent_multiplicator = 30000;
+    static constexpr uint32_t agent_count = slime_local_dispatch * agent_multiplicator;
+
+    SlimeSettings *settings;
 
   private:
     PushConstants m_push_constants;
@@ -38,6 +53,8 @@ class SlimeRenderer
     Texture2D m_slime_img;
     std::vector<Agent> m_agents;
     GPUBuffer m_agents_buffer;
+
+    GPUBuffer m_settings_uniform;
 
     ShaderResources m_resources;
     ComputePipeline m_fade_diffuse_pipeline;
