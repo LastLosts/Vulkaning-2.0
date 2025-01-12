@@ -28,7 +28,10 @@ VkInstance create_vulkan_instance(std::span<const char *> required_extensions, s
     create_info.ppEnabledExtensionNames = required_extensions.data();
 
     if (vkCreateInstance(&create_info, nullptr, &instance) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create vulkan instance");
+    {
+        std::cout << "Failed to create vulkan instance\n";
+        return VK_NULL_HANDLE;
+    }
 
     return instance;
 }
@@ -56,7 +59,10 @@ VkPhysicalDevice pick_vulkan_physical_device(std::span<VkPhysicalDevice> availab
     }
 
     if (physical_device == VK_NULL_HANDLE)
-        throw std::runtime_error("Could not find suitable vulkan device");
+    {
+        std::cout << "Could not find suitable vulkan device\n";
+        return VK_NULL_HANDLE;
+    }
 
     return physical_device;
 }
@@ -90,7 +96,9 @@ VkDevice create_vulkan_device(VkPhysicalDevice physical_device, std::span<VkDevi
     create_info.pNext = &features2;
 
     if (vkCreateDevice(physical_device, &create_info, nullptr, &device) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create vulkan device");
+    {
+        std::cout << "Failed to create vulkan device\n";
+    }
 
     return device;
 }
@@ -104,7 +112,10 @@ VkCommandPool create_vulkan_command_pool(VkDevice device, uint32_t queue_family,
     info.flags = flags;
 
     if (vkCreateCommandPool(device, &info, nullptr, &command_pool) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create vulkan command pool");
+    {
+        std::cout << "Failed to create vulkan command pool\n";
+        return VK_NULL_HANDLE;
+    }
 
     return command_pool;
 }
@@ -121,7 +132,10 @@ std::vector<VkCommandBuffer> allocate_vulkan_command_buffers(VkDevice device, Vk
     info.commandBufferCount = count;
 
     if (vkAllocateCommandBuffers(device, &info, buffers.data()) != VK_SUCCESS)
-        throw std::runtime_error("Failed to allocate vulkan command buffers");
+    {
+        std::cout << "Failed to allocate vulkan command buffers";
+        return {};
+    }
 
     return buffers;
 }
@@ -133,7 +147,10 @@ VkSemaphore create_vulkan_semaphore(VkDevice device)
     info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
     if (vkCreateSemaphore(device, &info, nullptr, &semaphore) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create vulkan semaphore");
+    {
+        std::cout << "Failed to create vulkan semaphore";
+        return VK_NULL_HANDLE;
+    }
     return semaphore;
 }
 VkFence create_vulkan_fence(VkDevice device, bool initial_state)
@@ -147,7 +164,10 @@ VkFence create_vulkan_fence(VkDevice device, bool initial_state)
         info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     if (vkCreateFence(device, &info, nullptr, &fence) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create vulkan fence");
+    {
+        std::cout << "Failed to create vulkan fence\n";
+        return VK_NULL_HANDLE;
+    }
 
     return fence;
 }
@@ -166,7 +186,8 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
     VkSurfaceCapabilitiesKHR surface_capabilites{};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surface_capabilites);
 
-    VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
+    /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;*/
+    VkPresentModeKHR present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 
     VkSwapchainCreateInfoKHR info{};
     info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -183,7 +204,11 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
     info.presentMode = present_mode;
     info.imageSharingMode = (queue_family_count > 1) ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
 
-    vkCreateSwapchainKHR(device, &info, nullptr, &swapchain);
+    if (vkCreateSwapchainKHR(device, &info, nullptr, &swapchain) != VK_SUCCESS)
+    {
+        std::cout << "Failed to create swapchain\n";
+        return VK_NULL_HANDLE;
+    }
 
     return swapchain;
 }
@@ -204,7 +229,10 @@ VkImage create_vulkan_image(VkDevice device, VkFormat format, VkExtent3D extent,
     info.usage = usage;
 
     if (vkCreateImage(device, &info, nullptr, &image) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create vulkan image");
+    {
+        std::cout << "Failed to create vulkan image\n";
+        return VK_NULL_HANDLE;
+    }
 
     return image;
 }
@@ -226,21 +254,23 @@ VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat fo
     info.subresourceRange = subresource_range;
     info.image = image;
 
-    vkCreateImageView(device, &info, nullptr, &view);
+    if (vkCreateImageView(device, &info, nullptr, &view) != VK_SUCCESS)
+    {
+        std::cout << "Failed to create image view\n";
+        return VK_NULL_HANDLE;
+    }
 
     return view;
 }
-VkShaderModule load_vulkan_shader_module(VkDevice device, const char *file_path)
+// TODO: when file not loads error code -1, when shader module doesn't create error code -2
+bool load_vulkan_shader_module(VkDevice device, const char *file_path, VkShaderModule &out_shader)
 {
     std::ifstream file(file_path, std::ios::ate | std::ios::binary);
 
-    std::filesystem::path shader_path{file_path};
-
     if (!file.is_open())
     {
-        printf("%s\n", shader_path.parent_path().c_str());
-
-        throw std::runtime_error("Failed to open shader file. Do proper error handling.");
+        std::cerr << "Failed to open shader file: " << file_path << '\n';
+        return false;
     }
 
     size_t file_size = static_cast<size_t>(file.tellg());
@@ -257,12 +287,12 @@ VkShaderModule load_vulkan_shader_module(VkDevice device, const char *file_path)
     info.codeSize = buffer.size() * sizeof(uint32_t);
     info.pCode = buffer.data();
 
-    VkShaderModule shader{};
-
-    if (vkCreateShaderModule(device, &info, nullptr, &shader) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create shader module. Do proper error handling.");
-
-    return shader;
+    if (vkCreateShaderModule(device, &info, nullptr, &out_shader) != VK_SUCCESS)
+    {
+        std::cerr << "Failed to create vulkan shader module\n";
+        return false;
+    }
+    return true;
 }
 void transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout current_layout, VkImageLayout new_layout)
 {

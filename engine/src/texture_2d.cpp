@@ -42,5 +42,9 @@ void Texture2D::transition_layout(VkCommandBuffer cmd, VkImageLayout new_layout)
         m_layout = new_layout;
     }
 }
+void Texture2D::copy_to(VkCommandBuffer cmd, const Texture2D &destination)
+{
+    copy_image_to_image(cmd, m_image, destination.image(), m_extent, destination.extent());
+}
 
 } // namespace ving

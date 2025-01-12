@@ -67,8 +67,7 @@ ImGuiRenderer::~ImGuiRenderer()
     vkDestroyDescriptorPool(m_device, m_pool, nullptr);
 }
 
-void ImGuiRenderer::render(const RenderFrames::FrameInfo &frame,
-                           const std::vector<std::function<void()>> &imgui_functions)
+void ImGuiRenderer::render(const FrameInfo &frame, const std::vector<std::function<void()>> &imgui_functions) const
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplSDL3_NewFrame();

@@ -2,6 +2,7 @@
 #include "SDL3/SDL_events.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "imgui.h"
+#include "utility/vulkan_utils.hpp"
 #include <vulkan/vulkan_core.h>
 
 #include <chrono>
@@ -11,17 +12,13 @@ namespace ving
 
 Engine::Engine()
     : m_window{m_instance, 1280, 720}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window},
-      m_imgui_renderer{m_core, m_window, m_render_frames}, m_slime_renderer{m_core}
-{
-}
-void Engine::run()
+      m_imgui_renderer{m_core, m_window, m_render_frames}
 {
     m_running = true;
 }
-void Engine::update()
-{
-    auto start_update_time = std::chrono::high_resolution_clock::now();
 
+FrameInfo Engine::begin_frame()
+{
     SDL_Event event;
 
     while (SDL_PollEvent(&event))
@@ -31,53 +28,30 @@ void Engine::update()
 
         ImGui_ImplSDL3_ProcessEvent(&event);
     }
-    RenderFrames::FrameInfo frame = m_render_frames.begin_frame();
-    VkCommandBuffer cmd = frame.cmd;
-    Texture2D &draw_img = *frame.draw_img;
+    FrameInfo frame = m_render_frames.begin_frame();
 
-    /*draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_GENERAL);*/
-
-    /*VkClearColorValue clear_val = {{0.12f, 0.12f, 0.12f, 1.0f}};*/
-    /**/
-    /*VkImageSubresourceRange subresource_range{};*/
-    /*subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;*/
-    /*subresource_range.baseMipLevel = 0;*/
-    /*subresource_range.levelCount = VK_REMAINING_MIP_LEVELS;*/
-    /*subresource_range.baseArrayLayer = 0;*/
-    /*subresource_range.layerCount = VK_REMAINING_ARRAY_LAYERS;*/
-    /**/
-    /*vkCmdClearColorImage(cmd, draw_img.image(), draw_img.layout(), &clear_val, 1, &subresource_range);*/
-
-    auto start_record_render_time = std::chrono::high_resolution_clock::now();
-
-    m_slime_renderer.render(frame, m_time, m_delta_time);
-
-    m_imgui_renderer.render(
-        frame, {[this]() {
-            ImGui::Text("FPS: %.0f", 1.0f / m_delta_time);
-            ImGui::Text("Delta Time: %fms", m_delta_time * 1000);
-            ImGui::Text("Cmd record time: %fms", m_record_commands_time * 1000);
-
-            ImGui::DragFloat("Move speed", &m_slime_renderer.settings->movement_speed, 0.001f, 0.001f, 1.0f);
-            ImGui::DragFloat("Sensor angle spacing*pi", &m_slime_renderer.settings->sensor_angle_spacing, 0.01f, 0.0f,
-                             2.0f);
-            ImGui::DragFloat("Turn Speed", &m_slime_renderer.settings->turn_speed, 0.01f, 0.01f, 20.0f);
-            ImGui::DragInt("Sensor Size", &m_slime_renderer.settings->sensor_size, 1.0f, 0, 20);
-            ImGui::DragInt("Sensor Distance", &m_slime_renderer.settings->sensor_distance, 1.0f, 0, 20);
-        }});
-    auto end_record_render_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float> record_time = end_record_render_time - start_record_render_time;
-    m_record_commands_time = record_time.count();
-
-    draw_img.transition_layout(cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-
+    return frame;
+}
+void Engine::end_frame(FrameInfo frame)
+{
+    frame.draw_img->transition_layout(frame.cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     m_render_frames.end_frame();
-
-    auto end_update_time = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<float> delta = end_update_time - start_update_time;
-    m_delta_time = delta.count();
-    m_time += m_delta_time;
 }
 
+bool Engine::load_shader(const char *path, VkShaderModule &out_shader) const
+{
+    return load_vulkan_shader_module(m_core.device(), path, out_shader);
+}
+
+void Engine::copy_buffer_to_buffer_immediate(const GPUBuffer &source, const GPUBuffer &destination) const
+{
+    m_core.immediate_transfer([&source, &destination](VkCommandBuffer cmd) {
+        VkBufferCopy copy{};
+        copy.size = source.size();
+        copy.dstOffset = 0;
+        copy.srcOffset = 0;
+
+        vkCmdCopyBuffer(cmd, source.buffer(), destination.buffer(), 1, &copy);
+    });
+}
 } // namespace ving

@@ -18,7 +18,7 @@ class ImGuiRenderer
     ImGuiRenderer &operator=(const ImGuiRenderer &) = delete;
     ImGuiRenderer &operator=(ImGuiRenderer &&) = delete;
 
-    void render(const RenderFrames::FrameInfo &frame, const std::vector<std::function<void()>> &imgui_functions);
+    void render(const FrameInfo &frame, const std::vector<std::function<void()>> &imgui_functions) const;
 
   private:
     VkDevice m_device;

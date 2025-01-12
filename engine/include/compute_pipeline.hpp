@@ -8,29 +8,26 @@ namespace ving
 class ComputePipeline
 {
   public:
-    ComputePipeline();
     ComputePipeline(const VulkanCore &core, const ShaderResources &shader_resources, uint32_t push_constants_size,
                     VkShaderModule compute_shader);
     ~ComputePipeline();
 
-    ComputePipeline(const ComputePipeline &) = default;
+    ComputePipeline(const ComputePipeline &) = delete;
     ComputePipeline(ComputePipeline &&) = delete;
-    ComputePipeline &operator=(const ComputePipeline &) = default;
-    ComputePipeline &operator=(ComputePipeline &&other)
-    {
-        std::swap(m_device, other.m_device);
-        std::swap(m_pipeline, other.m_pipeline);
-        std::swap(m_layout, other.m_layout);
-        return *this;
-    }
+    ComputePipeline &operator=(const ComputePipeline &) = delete;
+    ComputePipeline &operator=(ComputePipeline &&other) = delete;
 
     [[nodiscard]] VkPipeline pipeline() const noexcept { return m_pipeline; }
     [[nodiscard]] VkPipelineLayout layout() const noexcept { return m_layout; }
+
+    void dispatch(VkCommandBuffer cmd, const ShaderResources &resources, void *push_constants, uint32_t group_count_x,
+                  uint32_t group_count_y = 1, uint32_t group_count_z = 1);
 
   private:
     VkDevice m_device;
 
     VkPipeline m_pipeline;
     VkPipelineLayout m_layout;
+    size_t m_push_constants_size;
 };
 } // namespace ving

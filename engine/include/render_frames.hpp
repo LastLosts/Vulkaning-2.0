@@ -9,6 +9,12 @@
 
 namespace ving
 {
+struct FrameInfo
+{
+    Texture2D *draw_img;
+    VkCommandBuffer cmd;
+};
+
 class RenderFrames final
 {
   private:
@@ -28,12 +34,6 @@ class RenderFrames final
     RenderFrames &operator=(const RenderFrames &) = delete;
     RenderFrames(RenderFrames &&) = delete;
     RenderFrames &operator=(RenderFrames &&) = delete;
-
-    struct FrameInfo
-    {
-        Texture2D *draw_img;
-        VkCommandBuffer cmd;
-    };
 
     FrameInfo begin_frame();
     void end_frame();

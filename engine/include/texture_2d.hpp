@@ -18,6 +18,7 @@ class Texture2D
     [[nodiscard]] VkImageLayout layout() const noexcept { return m_layout; }
 
     void transition_layout(VkCommandBuffer cmd, VkImageLayout new_layout);
+    void copy_to(VkCommandBuffer cmd, const Texture2D &destination);
 
   private:
     VkDevice m_device;
