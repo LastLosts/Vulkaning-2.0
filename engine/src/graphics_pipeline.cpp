@@ -1,13 +1,15 @@
 #include "graphics_pipeline.hpp"
 #include "render_frames.hpp"
 #include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
+GraphicsPipline::GraphicsPipline() : m_device{nullptr}, m_pipeline{nullptr}, m_layout{nullptr}, m_push_constants_size{0}
+{
+}
 GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &resources, uint32_t push_constant_size,
                                  VkShaderModule vertex_shader, VkShaderModule fragment_shader)
-    : m_device{core.device()}
+    : m_device{core.device()}, m_push_constants_size{push_constant_size}
 {
     VkPushConstantRange push_constant_range{};
     push_constant_range.offset = 0;
@@ -65,10 +67,18 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
     multisample.alphaToCoverageEnable = VK_FALSE;
     multisample.alphaToOneEnable = VK_FALSE;
 
+    // Enabled alpha blending by default
     VkPipelineColorBlendAttachmentState color_blend_attachment{};
     color_blend_attachment.colorWriteMask =
         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    color_blend_attachment.blendEnable = VK_FALSE;
+    color_blend_attachment.blendEnable = VK_TRUE;
+    color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
+
+    color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo color_blend{};
     color_blend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -79,6 +89,12 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
 
     VkPipelineDepthStencilStateCreateInfo depth_test{};
     depth_test.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depth_test.depthWriteEnable = VK_TRUE;
+    depth_test.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+    depth_test.depthBoundsTestEnable = VK_FALSE;
+    depth_test.stencilTestEnable = VK_FALSE;
+    depth_test.minDepthBounds = 0.0f;
+    depth_test.maxDepthBounds = 1.0f;
 
     VkFormat color_attachment_format = RenderFrames::draw_image_format;
 
@@ -86,6 +102,7 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
     render_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     render_info.colorAttachmentCount = 1;
     render_info.pColorAttachmentFormats = &color_attachment_format;
+    render_info.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
 
     VkDynamicState states[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 
@@ -99,6 +116,7 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
     pipeline_info.stageCount = shader_stages.size();
     pipeline_info.pStages = shader_stages.data();
     pipeline_info.pVertexInputState = &vertex_input;
+    pipeline_info.pViewportState = &viewport_state;
     pipeline_info.pInputAssemblyState = &input_assembly;
     pipeline_info.pRasterizationState = &rasterizer;
     pipeline_info.pMultisampleState = &multisample;
@@ -116,4 +134,30 @@ GraphicsPipline::~GraphicsPipline()
     vkDestroyPipeline(m_device, m_pipeline, nullptr);
     vkDestroyPipelineLayout(m_device, m_layout, nullptr);
 }
+
+/*void GraphicsPipline::draw(VkCommandBuffer cmd, VkRenderingInfo render_info, const ShaderResources &resources,*/
+/*                           void *push_constants)*/
+/*{*/
+/*    VkViewport viewport{};*/
+/*    viewport.width = render_info.renderArea.extent.width;*/
+/*    viewport.height = render_info.renderArea.extent.height;*/
+/*    viewport.minDepth = 0.0f;*/
+/*    viewport.maxDepth = 1.0f;*/
+/**/
+/*    VkRect2D scissor{};*/
+/*    scissor.offset = {0, 0};*/
+/*    scissor.extent = render_info.renderArea.extent;*/
+/**/
+/*    vkCmdBeginRendering(cmd, &render_info);*/
+/*    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);*/
+/*    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_layout, 0, resources.sets_size(),
+ * resources.sets(),*/
+/*                            0, nullptr);*/
+/*    vkCmdPushConstants(cmd, m_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,*/
+/*                       m_push_constants_size, push_constants);*/
+/*    vkCmdSetViewport(cmd, 0, 1, &viewport);*/
+/*    vkCmdSetScissor(cmd, 0, 1, &scissor);*/
+/**/
+/*    vkCmdEndRendering(cmd);*/
+/*}*/
 } // namespace ving

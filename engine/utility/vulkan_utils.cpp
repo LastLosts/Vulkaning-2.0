@@ -186,8 +186,8 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
     VkSurfaceCapabilitiesKHR surface_capabilites{};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surface_capabilites);
 
-    /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;*/
-    VkPresentModeKHR present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+    VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
+    /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;*/
 
     VkSwapchainCreateInfoKHR info{};
     info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -242,6 +242,10 @@ VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat fo
 
     VkImageSubresourceRange subresource_range{};
     subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    if (format == VK_FORMAT_D32_SFLOAT)
+    {
+        subresource_range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
     subresource_range.baseMipLevel = 0;
     subresource_range.levelCount = 1;
     subresource_range.baseArrayLayer = 0;
@@ -298,6 +302,8 @@ void transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout current_
 {
     VkImageSubresourceRange subresource_range{};
     subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    if (new_layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
+        subresource_range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     subresource_range.baseMipLevel = 0;
     subresource_range.levelCount = VK_REMAINING_MIP_LEVELS;
     subresource_range.baseArrayLayer = 0;

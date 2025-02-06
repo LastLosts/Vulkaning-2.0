@@ -8,6 +8,11 @@ set(SDL_STATIC ON)
 add_subdirectory(SDL EXCLUDE_FROM_ALL)
 add_subdirectory(VulkanMemoryAllocator)
 
+set(GLM_BUILD_TESTS off)
+set(BUILD_SHARED_LIBS off)
+
+add_subdirectory(glm)
+
 add_library(imgui STATIC)
 
 target_include_directories(imgui PUBLIC imgui)
@@ -27,6 +32,6 @@ target_link_libraries(imgui PUBLIC Vulkan::Vulkan SDL3::SDL3)
 
 target_link_libraries(
   engine-dependencies INTERFACE Vulkan::Vulkan SDL3::SDL3
-                                GPUOpen::VulkanMemoryAllocator imgui)
+                                GPUOpen::VulkanMemoryAllocator imgui glm::glm)
 
 target_compile_options(engine-dependencies INTERFACE -w)

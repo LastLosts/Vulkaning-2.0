@@ -10,6 +10,11 @@ class GPUBuffer
     GPUBuffer(const VulkanCore &core, size_t allocation_size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage);
     ~GPUBuffer();
 
+    GPUBuffer(const GPUBuffer &) = delete;
+    GPUBuffer(GPUBuffer &&other) = delete;
+    GPUBuffer &operator=(const GPUBuffer &) = delete;
+    GPUBuffer &operator=(GPUBuffer &&other) = delete;
+
     void *map_and_get_memory();
     void set_memory(void *data, uint32_t size);
 

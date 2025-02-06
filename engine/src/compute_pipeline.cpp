@@ -1,4 +1,5 @@
 #include "compute_pipeline.hpp"
+#include <iostream>
 #include <vulkan/vulkan_core.h>
 
 namespace ving
@@ -21,7 +22,10 @@ ComputePipeline::ComputePipeline(const VulkanCore &core, const ShaderResources &
     layout_info.pPushConstantRanges = &push_constant_range;
 
     if (vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_layout) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create compute pipeline layout. Do proper error handling.");
+    {
+        std::cout << "Failed to create compute pipeline layout. Do proper error handling.\n";
+        exit(-1);
+    }
 
     VkPipelineShaderStageCreateInfo shader_stage{};
     shader_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

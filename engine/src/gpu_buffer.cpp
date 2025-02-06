@@ -9,7 +9,7 @@ namespace ving
 {
 GPUBuffer::GPUBuffer(const VulkanCore &core, size_t allocation_size, VkBufferUsageFlags usage,
                      VmaMemoryUsage memory_usage)
-    : m_allocator{core.allocator()}
+    : m_allocator{core.allocator()}, m_memory_mapped{false}
 {
     VkBufferCreateInfo buffer_info{};
     buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -36,20 +36,26 @@ void *GPUBuffer::map_and_get_memory()
     if (vmaMapMemory(m_allocator, m_allocation, &m_mapped_memory) == VK_SUCCESS)
     {
         m_memory_mapped = true;
-        return m_mapped_memory;
     }
 
-    std::cerr << "Failed to map buffer memory\n";
-    return nullptr;
+    /*std::cerr << "Failed to map buffer memory\n";*/
+    return m_mapped_memory;
 }
+
 void GPUBuffer::set_memory(void *data, uint32_t size)
 {
     assert(m_allocation_info.size >= size);
-    vmaMapMemory(m_allocator, m_allocation, &m_mapped_memory);
 
-    memcpy(m_mapped_memory, data, size);
+    if (vmaMapMemory(m_allocator, m_allocation, &m_mapped_memory) == VK_SUCCESS)
+    {
+        memcpy(m_mapped_memory, data, size);
 
-    vmaUnmapMemory(m_allocator, m_allocation);
+        vmaUnmapMemory(m_allocator, m_allocation);
+    }
+    else
+    {
+        std::cout << "Failed to map\n";
+    }
 }
 
 } // namespace ving

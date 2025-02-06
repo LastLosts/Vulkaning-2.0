@@ -2,7 +2,6 @@
 #include "engine.hpp"
 #include "shader_resources.hpp"
 #include <chrono>
-#include <iostream>
 #include <numbers>
 #include <random>
 

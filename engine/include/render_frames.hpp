@@ -12,6 +12,7 @@ namespace ving
 struct FrameInfo
 {
     Texture2D *draw_img;
+    Texture2D *depth_img;
     VkCommandBuffer cmd;
 };
 
@@ -45,12 +46,14 @@ class RenderFrames final
     std::array<FrameResources, frames_in_flight> m_frames;
 
     static constexpr VkFormat draw_image_format = VK_FORMAT_R16G16B16A16_SFLOAT;
+    static constexpr VkFormat depth_image_format = VK_FORMAT_D32_SFLOAT;
 
     [[nodiscard]] VkQueue graphics_queue() const noexcept { return m_graphics_queue; }
 
   private:
     uint64_t m_frame_number;
     Texture2D m_draw_image;
+    Texture2D m_depth_image;
 
     VkQueue m_graphics_queue;
 
