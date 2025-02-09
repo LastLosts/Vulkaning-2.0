@@ -115,8 +115,13 @@ int main()
     resources.write_buffer(0, 1, agents_buffer);
     resources.write_buffer(0, 2, settings_uniform);
 
-    ving::ComputePipeline fade_diffuse_pipeline{engine.core(), resources, sizeof(PushConstants), fade_diffuse_shader};
-    ving::ComputePipeline agent_update_pipeline{engine.core(), resources, sizeof(PushConstants), slime_shader};
+    ving::ComputePipeline fade_diffuse_pipeline{engine.core(), resources, fade_diffuse_shader, sizeof(PushConstants)};
+    ving::ComputePipeline agent_update_pipeline{
+        engine.core(),
+        resources,
+        slime_shader,
+        sizeof(PushConstants),
+    };
 
     vkDestroyShaderModule(engine.core().device(), slime_shader, nullptr);
     vkDestroyShaderModule(engine.core().device(), fade_diffuse_shader, nullptr);

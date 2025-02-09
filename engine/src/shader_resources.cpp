@@ -79,6 +79,8 @@ ShaderResources::~ShaderResources()
 }
 void ShaderResources::write_image(uint32_t set, uint32_t binding, const Texture2D &image, VkImageLayout expected_layout)
 {
+    assert(m_shader_sets[set].bindings[binding].type != VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+
     VkDescriptorImageInfo image_info{};
     image_info.imageView = image.view();
     image_info.imageLayout = expected_layout;

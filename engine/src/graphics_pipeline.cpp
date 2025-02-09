@@ -11,17 +11,22 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
                                  VkShaderModule vertex_shader, VkShaderModule fragment_shader)
     : m_device{core.device()}, m_push_constants_size{push_constant_size}
 {
-    VkPushConstantRange push_constant_range{};
-    push_constant_range.offset = 0;
-    push_constant_range.size = push_constant_size;
-    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
     VkPipelineLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    layout_info.pushConstantRangeCount = 1;
-    layout_info.pPushConstantRanges = &push_constant_range;
     layout_info.setLayoutCount = resources.layouts_size();
     layout_info.pSetLayouts = resources.layouts();
+
+    if (push_constant_size != 0)
+    {
+        VkPushConstantRange push_constant_range{};
+        push_constant_range.offset = 0;
+        push_constant_range.size = push_constant_size;
+        push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        layout_info.pushConstantRangeCount = 1;
+        layout_info.pPushConstantRanges = &push_constant_range;
+    }
 
     if (vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_layout) != VK_SUCCESS)
         throw std::runtime_error("Failed to create pipeline layout. Do proper error handling");
@@ -131,8 +136,11 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
 }
 GraphicsPipline::~GraphicsPipline()
 {
-    vkDestroyPipeline(m_device, m_pipeline, nullptr);
-    vkDestroyPipelineLayout(m_device, m_layout, nullptr);
+    if (m_device != VK_NULL_HANDLE)
+    {
+        vkDestroyPipeline(m_device, m_pipeline, nullptr);
+        vkDestroyPipelineLayout(m_device, m_layout, nullptr);
+    }
 }
 
 /*void GraphicsPipline::draw(VkCommandBuffer cmd, VkRenderingInfo render_info, const ShaderResources &resources,*/

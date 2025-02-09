@@ -8,8 +8,10 @@ namespace ving
 class ComputePipeline
 {
   public:
-    ComputePipeline(const VulkanCore &core, const ShaderResources &shader_resources, uint32_t push_constants_size,
-                    VkShaderModule compute_shader);
+    ComputePipeline(const VulkanCore &core, const ShaderResources &shader_resources, VkShaderModule compute_shader,
+                    uint32_t push_constants_size = 0);
+    ComputePipeline(const VulkanCore &core, VkShaderModule compute_shader, uint32_t push_constants_size = 0);
+
     ~ComputePipeline();
 
     ComputePipeline(const ComputePipeline &) = delete;

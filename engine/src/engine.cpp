@@ -19,6 +19,7 @@ Engine::Engine()
 
 FrameInfo Engine::begin_frame()
 {
+    // TODO: Add begin rendering
     m_frame_start_time = std::chrono::high_resolution_clock::now();
 
     SDL_Event event;

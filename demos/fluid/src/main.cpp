@@ -1,22 +1,50 @@
+#include "compute_pipeline.hpp"
 #include "engine.hpp"
+#include "glm/ext/scalar_constants.hpp"
 #include "imgui.h"
 #include "primitives_renderer.hpp"
+#include "shader_resources.hpp"
 #include <iostream>
+#include <random>
 
 constexpr float gravity = 900.0f;
 
 static float collision_damping = 0.9f;
 
-static float particle_scale = 50.0f;
-static float particle_spacing = 5.0f;
-static int particle_count = 100;
+static float particle_scale = 10.0f;
+static float particle_spacing = 15.0f;
+static int particle_count = 300;
 
-static std::vector<glm::vec3> positions_scales{};
+static std::vector<ving::PrimitiveParameters> primitive_parameters{};
 static std::vector<glm::vec2> velocities{};
+static std::vector<float> properties{};
 
-static void generate_particles()
+static void generate_particles_random()
 {
-    positions_scales.resize(particle_count);
+    velocities.clear();
+    primitive_parameters.resize(particle_count);
+    velocities.resize(particle_count);
+
+    std::random_device dev{};
+    std::default_random_engine el{dev()};
+
+    std::uniform_real_distribution<float> uniform_dist_height{
+        particle_scale / 2.0f, ving::Engine::initial_window_height - particle_scale / 2.0f};
+    std::uniform_real_distribution<float> uniform_dist_width{particle_scale / 2.0f, ving::Engine::initial_window_width -
+                                                                                        particle_scale / 2.0f};
+
+    for (uint32_t i = 0; i < particle_count; ++i)
+    {
+        primitive_parameters[i].position = {uniform_dist_width(el), uniform_dist_height(el)};
+        primitive_parameters[i].scale = particle_scale;
+        primitive_parameters[i].color = {0.1f, 0.1f, 0.9f};
+    }
+}
+
+static void generate_particles_cube()
+{
+    velocities.clear();
+    primitive_parameters.resize(particle_count);
     velocities.resize(particle_count);
 
     uint32_t particle_per_row = (int)sqrt(particle_count);
@@ -26,39 +54,57 @@ static void generate_particles()
 
     for (uint32_t i = 0; i < particle_count; ++i)
     {
-        positions_scales[i].x = (i % particle_per_row) * spacing + particle_scale;
-        positions_scales[i].y = (i / particle_per_row) * spacing + particle_scale;
-        positions_scales[i].z = particle_scale;
+        primitive_parameters[i].position = {(i % particle_per_row) * spacing + particle_scale,
+                                            (i / particle_per_row) * spacing + particle_scale};
+        primitive_parameters[i].scale = particle_scale;
+        primitive_parameters[i].color = {0.1f, 0.1f, 0.9f};
     }
 }
 
 static void update_particles(const ving::Engine &engine)
 {
-    /*assert(positions_scales.size() == velocities.size() == particle_count);*/
+    /*assert(primitive_parameters.size() == velocities.size() == particle_count);*/
 
     for (size_t i = 0; i < particle_count; ++i)
     {
         velocities[i] += glm::vec2{0.0f, 1.0f} * gravity * engine.delta_time();
-        positions_scales[i].x += velocities[i].x * engine.delta_time();
-        positions_scales[i].y += velocities[i].y * engine.delta_time();
+        primitive_parameters[i].position += velocities[i] * engine.delta_time();
 
-        glm::vec2 bounds_max{(float)ving::Engine::initial_window_width - positions_scales[i].z / 2.0f,
-                             (float)ving::Engine::initial_window_height - positions_scales[i].z / 2.0f};
+        glm::vec2 bounds_max{(float)ving::Engine::initial_window_width - primitive_parameters[i].scale / 2.0f,
+                             (float)ving::Engine::initial_window_height - primitive_parameters[i].scale / 2.0f};
 
-        glm::vec2 bounds_min{positions_scales[i].z, positions_scales[i].z};
+        glm::vec2 bounds_min{primitive_parameters[i].scale, primitive_parameters[i].scale};
 
-        if (positions_scales[i].x > bounds_max.x)
+        if (primitive_parameters[i].position.x > bounds_max.x)
         {
-            positions_scales[i].x = bounds_max.x;
+            primitive_parameters[i].position.x = bounds_max.x;
             velocities[i].x *= -1 * collision_damping;
         }
-        if (positions_scales[i].y > bounds_max.y)
+        if (primitive_parameters[i].position.y > bounds_max.y)
         {
-            positions_scales[i].y = bounds_max.y;
+            primitive_parameters[i].position.y = bounds_max.y;
+            velocities[i].y *= -1 * collision_damping;
+        }
+        if (primitive_parameters[i].position.x < bounds_min.x)
+        {
+            primitive_parameters[i].position.x = bounds_min.x;
+            velocities[i].x *= -1 * collision_damping;
+        }
+        if (primitive_parameters[i].position.y < bounds_min.y)
+        {
+            primitive_parameters[i].position.y = bounds_min.y;
             velocities[i].y *= -1 * collision_damping;
         }
     }
 }
+
+struct PushContstants
+{
+    int particle_count;
+    float smoothing_radius;
+    float minus;
+    float derive;
+};
 
 int main()
 {
@@ -67,34 +113,94 @@ int main()
         ving::Engine engine{};
         ving::PrimitivesRenderer renderer{engine.core()};
 
-        generate_particles();
+        /*generate_particles_cube();*/
+        generate_particles_random();
 
         bool simulate = false;
 
+        VkShaderModule fluid_density{};
+        if (!engine.load_shader("./demos/fluid/shaders/spirv/fluid_density.comp.spv", fluid_density))
+        {
+            throw std::runtime_error("Failed to load shader");
+        }
+
+        std::vector<ving::ShaderBindingSet> bindings{
+            ving::ShaderBindingSet{
+                {
+                    {0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE},
+                    {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER},
+                },
+            },
+        };
+
+        std::vector<glm::vec4> positions;
+        positions.reserve(particle_count);
+        for (auto &&p : primitive_parameters)
+        {
+            positions.push_back({p.position, 1.0, 3.5});
+        }
+
+        ving::GPUBuffer particles_buffer{engine.core(), positions.size() * sizeof(glm::vec4),
+                                         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU};
+
+        ving::Texture2D background{engine.core(),
+                                   VkExtent2D{ving::Engine::initial_window_width, ving::Engine::initial_window_height},
+                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+                                   VMA_MEMORY_USAGE_GPU_ONLY, ving::RenderFrames::draw_image_format};
+
+        particles_buffer.set_memory(positions.data(), positions.size() * sizeof(glm::vec4));
+
+        ving::ShaderResources resources{engine.core().device(), bindings, VK_SHADER_STAGE_COMPUTE_BIT};
+
+        resources.write_image(0, 0, background, VK_IMAGE_LAYOUT_GENERAL);
+        resources.write_buffer(0, 1, particles_buffer);
+
+        ving::ComputePipeline density_background_render{engine.core(), resources, fluid_density,
+                                                        sizeof(PushContstants)};
+
+        PushContstants push{particle_count, 0.1f, -100.0f, 900.0f};
+
         while (engine.running())
         {
-            if (engine.key_pressed(SDLK_R))
-                simulate = true;
-            if (engine.key_pressed(SDLK_G))
-                generate_particles();
-
-            if (simulate)
-                update_particles(engine);
+            /*if (engine.key_pressed(SDLK_SPACE))*/
+            /*    simulate = !simulate;*/
+            /*if (engine.key_pressed(SDLK_G))*/
+            /*    generate_particles_random();*/
+            /**/
+            /*if (simulate)*/
+            /*    update_particles(engine);*/
 
             ving::FrameInfo frame = engine.begin_frame();
 
-            renderer.render(ving::PrimitiveType::Circle, positions_scales, frame);
-            engine.imgui_renderer().render(frame, {[&engine]() {
+            // Background rendering
+            background.transition_layout(frame.cmd, VK_IMAGE_LAYOUT_GENERAL);
+            density_background_render.dispatch(frame.cmd, resources, &push,
+                                               std::ceil(background.extent().width / 16.0f),
+                                               std::ceil(background.extent().height / 16.0f));
+
+            background.transition_layout(frame.cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+            frame.draw_img->transition_layout(frame.cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            background.copy_to(frame.cmd, *frame.draw_img);
+
+            // TODO: Some way to tell the engine not to clear the image
+            renderer.render(ving::PrimitiveType::Circle, primitive_parameters, frame);
+            engine.imgui_renderer().render(frame, {[&engine, &push]() {
                                                ImGui::Text("%f", engine.delta_time() * 1000.0f);
-                                               ImGui::DragFloat("Particle Spacing", &particle_spacing);
+                                               ImGui::DragFloat("Particle Spacing", &particle_spacing, 1, 1, 10);
                                                ImGui::DragFloat("Particle Scale", &particle_scale);
                                                ImGui::DragInt("Particle Count", &particle_count, 1, 1, 1000);
-                                               /*ImGui::Text("%f %f", velocities[0].x, velocities[0].y);*/
-                                               /*ImGui::Text("%f %f", positions_scales[0].x, positions_scales[0].y);*/
+                                               ImGui::DragFloat("Smoothing radius", &push.smoothing_radius, 0.001f,
+                                                                0.01f, 5.0f);
+                                               /*ImGui::DragFloat("Minus", &push.minus, 0.1f, 0.0f);*/
+                                               /*ImGui::DragFloat("Derive", &push.derive, 0.1f, 0.0f);*/
                                            }});
 
             engine.end_frame(frame);
         }
+#ifndef NDEBUG
+        vkDestroyShaderModule(engine.core().device(), fluid_density, nullptr);
+        vkDeviceWaitIdle(engine.core().device());
+#endif
     }
 
     catch (const std::exception &e)

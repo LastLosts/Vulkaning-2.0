@@ -2,6 +2,7 @@
 #extension GL_EXT_buffer_reference : require
 
 layout (location = 0) out vec2 out_uv;
+layout (location = 1) out vec3 out_color;
 
 struct Vertex
 {
@@ -18,8 +19,9 @@ layout (push_constant) uniform constants
 {
     mat4 ortho;
     vec2 position;
+    vec2 dummy;
+    vec3 color;
     float scale;
-    float dummy;
     VertexBuffer vertex_buffer;
 } pc;
 
@@ -31,4 +33,5 @@ void main()
 
     out_uv.x = v.uv_x;
     out_uv.y = v.uv_y;
+    out_color = pc.color;
 }

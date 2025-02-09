@@ -1,0 +1,83 @@
+#version 450
+
+layout (local_size_x = 16, local_size_y = 16) in;
+
+layout(rgba16f, set = 0, binding = 0) uniform image2D image;
+
+layout (push_constant) uniform constants
+{
+    int particle_count;
+    float smoothing_radius;
+    float minus;
+    float derive;
+} pc;
+
+layout(std140, set = 0, binding = 1) buffer ParticleBuffer
+{
+    vec4 positions[];
+};
+
+const float particle_mass = 1.0;
+
+const float pi = 3.14159265359;
+const float FLOAT_MAX = 1.0 / 0.0;
+
+ivec2 image_size;
+
+float smoothing_kernel_spiky(vec2 position, float radius)
+{
+    float dst_squared = position.x * position.x + position.y * position.y;
+
+    if (radius * radius > dst_squared)
+    {
+        float volume = (pi * pow(radius, 4)) / 6;
+        return (radius - sqrt(dst_squared)) * (radius - sqrt(dst_squared)) / volume;
+    }
+    return 0.0;
+}
+
+float poly6_scaling_factor = 4.0 / (pi * pow(pc.smoothing_radius, 8));
+
+float smoothing_kernel_poly6(vec2 position, float radius)
+{
+    float dst_squared = position.x * position.x + position.y * position.y;
+
+    if (radius * radius > dst_squared)
+    {
+        float value = radius * radius - dst_squared;
+        // float volume = pi * pow(radius, 8) / 4;
+
+        return value * value * value * poly6_scaling_factor;
+    }
+    return 0.0;
+}
+
+float calculate_density(vec2 point)
+{
+    float density = 0.0;
+    
+    for(int i = 0; i < pc.particle_count; i++)
+    {
+        vec2 particle_position = vec2(float(positions[i].x) / float(image_size.x),
+                                      float(positions[i].y) / float(image_size.y));
+
+        density += particle_mass * smoothing_kernel_poly6(particle_position - point, pc.smoothing_radius);
+    }
+
+    return density;
+}
+
+void main()
+{
+    ivec2 texel_coord = ivec2(gl_GlobalInvocationID.xy);
+    image_size = imageSize(image);
+
+    vec2 position = vec2(float(texel_coord.x) / float(image_size.x), float(texel_coord.y) / float(image_size.y));
+
+    if (texel_coord.x < image_size.x && texel_coord.y < image_size.y)
+    {
+        float density = calculate_density(position);    
+
+        imageStore(image, texel_coord, (density - pc.minus) / pc.derive * vec4(1.0, 1.0, 1.0, 1.0));
+    }
+}
