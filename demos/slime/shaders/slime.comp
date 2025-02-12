@@ -98,10 +98,10 @@ void main()
     // uint agent_index = uint(gl_GlobalInvocationID.y * 256 * 16 + gl_GlobalInvocationID.x * 256 + gl_LocalInvocationID.y  * 16 + gl_LocalInvocationID.x);
 
 
-    if (agents[agent_index].x < 0.05 || agents[agent_index].x > 0.95 || agents[agent_index].y < 0.05 || agents[agent_index].y > 0.95)
-    {   
-        agents[agent_index].angle = random_float(uint(agent_index + pc.time)) * 2 * pi;
-    }
+    // if (agents[agent_index].x < 0.05 || agents[agent_index].x > 0.95 || agents[agent_index].y < 0.05 || agents[agent_index].y > 0.95)
+    // {
+        // agents[agent_index].angle = random_float(uint(agent_index + pc.time)) * 2 * pi;
+    // }
 
     agents[agent_index].x = clamp(agents[agent_index].x, 0.05, 0.95);
     agents[agent_index].y = clamp(agents[agent_index].y, 0.05, 0.95);
@@ -141,6 +141,14 @@ void main()
     // TODO: Delta time
     float new_pos_x = current_agent.x + cos(current_agent.angle) * settings.movement_speed * pc.delta_time;
     float new_pos_y = current_agent.y + sin(current_agent.angle) * settings.movement_speed * pc.delta_time;
+
+    if (new_pos_x < 0.0 || new_pos_x >= 0.95 || new_pos_y < 0.0 || new_pos_y >= 0.95)
+    {
+        agents[agent_index].angle = random_float(uint(agent_index + pc.time)) * 2 * pi;
+    
+        new_pos_x = min(0.0, max(new_pos_x, 0.95));
+        new_pos_y = min(0.0, max(new_pos_y, 0.95));
+    }
 
 
     agents[agent_index].x = new_pos_x;

@@ -8,8 +8,6 @@ layout (push_constant) uniform constants
 {
     int particle_count;
     float smoothing_radius;
-    float minus;
-    float derive;
 } pc;
 
 layout(std140, set = 0, binding = 1) buffer ParticleBuffer
@@ -52,19 +50,50 @@ float smoothing_kernel_poly6(vec2 position, float radius)
     return 0.0;
 }
 
-float calculate_density(vec2 point)
+float smoothing_kernel_poly6_derivative(vec2 position, float radius)
 {
-    float density = 0.0;
+    float dst_squared = position.x * position.x + position.y * position.y;
+
+    if (dst_squared < radius * radius)
+    {
+        float f = radius * radius - dst_squared;
+        float scale = -24.0 / (pi * pow(radius, 8));
+        return scale * sqrt(dst_squared) * f * f;
+    }
+    return 0;
+}
+
+vec2 calculate_gradient(vec2 point)
+{
+    vec2 property_gradient = vec2(0);
+
+    for (int i = 0; i < pc.particle_count; ++i)
+    {
+        vec2 particle_position = vec2(positions[i].x, positions[i].y);
+        float particle_property = cos(positions[i].y - 3 + sin(positions[i].x));
+        vec2 dir = normalize(particle_position - point);
+        float slope = smoothing_kernel_poly6_derivative(particle_position, pc.smoothing_radius);
+    
+        property_gradient += -particle_property * dir * slope / positions[i].z;
+    }
+
+    return property_gradient;
+}
+
+float calculate_property(vec2 point)
+{
+    float property = 0.0;
     
     for(int i = 0; i < pc.particle_count; i++)
     {
-        vec2 particle_position = vec2(float(positions[i].x) / float(image_size.x),
-                                      float(positions[i].y) / float(image_size.y));
+        float particle_property = cos(positions[i].y - 3 + sin(positions[i].x));
 
-        density += particle_mass * smoothing_kernel_poly6(particle_position - point, pc.smoothing_radius);
+        float influense = smoothing_kernel_poly6(vec2(positions[i].x, positions[i].y) - point, pc.smoothing_radius);
+
+        property += influense * particle_property / positions[i].z;
     }
 
-    return density;
+    return property;
 }
 
 void main()
@@ -76,8 +105,12 @@ void main()
 
     if (texel_coord.x < image_size.x && texel_coord.y < image_size.y)
     {
-        float density = calculate_density(position);    
+        // float property = calculate_property(position);
 
-        imageStore(image, texel_coord, (density - pc.minus) / pc.derive * vec4(1.0, 1.0, 1.0, 1.0));
+        vec2 property_gradient = calculate_gradient(position);
+        imageStore(image, texel_coord, vec4(property_gradient, 0, 1.0));
+
+        // imageStore(image, texel_coord, property * vec4(1.0)); 
+        // imageStore(image, texel_coord, (density + 100.0) / 900.0 * vec4(1.0, 1.0, 1.0, 1.0));
     }
 }

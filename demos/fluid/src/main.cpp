@@ -13,7 +13,7 @@ static float collision_damping = 0.9f;
 
 static float particle_scale = 10.0f;
 static float particle_spacing = 15.0f;
-static int particle_count = 300;
+static int particle_count = 400;
 
 static std::vector<ving::PrimitiveParameters> primitive_parameters{};
 static std::vector<glm::vec2> velocities{};
@@ -102,9 +102,41 @@ struct PushContstants
 {
     int particle_count;
     float smoothing_radius;
-    float minus;
-    float derive;
 };
+
+float smoothing_kernel_poly6(glm::vec2 position, float radius)
+{
+    float dst_squared = position.x * position.x + position.y * position.y;
+
+    if (radius * radius > dst_squared)
+    {
+        float value = radius * radius - dst_squared;
+        float poly6_scaling_factor = 4.0 / (glm::pi<float>() * pow(radius, 8));
+        // float volume = pi * pow(radius, 8) / 4;
+
+        return value * value * value * poly6_scaling_factor;
+    }
+    return 0.0;
+}
+
+float calculate_density(uint32_t particle_index, glm::vec2 point, float smoothing_radius)
+{
+    float density = 0.0;
+
+    for (int i = 0; i < particle_count; i++)
+    {
+        if (i == particle_index)
+            continue;
+
+        glm::vec2 particle_position_screen_space{
+            primitive_parameters[i].position.x / (float)ving::Engine::initial_window_width,
+            primitive_parameters[i].position.y / (float)ving::Engine::initial_window_height};
+
+        density += smoothing_kernel_poly6(particle_position_screen_space - point, smoothing_radius);
+    }
+
+    return density;
+}
 
 int main()
 {
@@ -133,11 +165,19 @@ int main()
             },
         };
 
+        PushContstants push{particle_count, 0.3f};
+
         std::vector<glm::vec4> positions;
         positions.reserve(particle_count);
-        for (auto &&p : primitive_parameters)
+
+        for (uint32_t i = 0; i < particle_count; ++i)
         {
-            positions.push_back({p.position, 1.0, 3.5});
+            glm::vec2 particle_position_screen_space{
+                primitive_parameters[i].position.x / (float)ving::Engine::initial_window_width,
+                primitive_parameters[i].position.y / (float)ving::Engine::initial_window_height};
+
+            positions.push_back({particle_position_screen_space,
+                                 calculate_density(i, particle_position_screen_space, push.smoothing_radius), 0.0});
         }
 
         ving::GPUBuffer particles_buffer{engine.core(), positions.size() * sizeof(glm::vec4),
@@ -157,8 +197,6 @@ int main()
 
         ving::ComputePipeline density_background_render{engine.core(), resources, fluid_density,
                                                         sizeof(PushContstants)};
-
-        PushContstants push{particle_count, 0.1f, -100.0f, 900.0f};
 
         while (engine.running())
         {
@@ -183,16 +221,15 @@ int main()
             background.copy_to(frame.cmd, *frame.draw_img);
 
             // TODO: Some way to tell the engine not to clear the image
+
             renderer.render(ving::PrimitiveType::Circle, primitive_parameters, frame);
             engine.imgui_renderer().render(frame, {[&engine, &push]() {
                                                ImGui::Text("%f", engine.delta_time() * 1000.0f);
-                                               ImGui::DragFloat("Particle Spacing", &particle_spacing, 1, 1, 10);
-                                               ImGui::DragFloat("Particle Scale", &particle_scale);
-                                               ImGui::DragInt("Particle Count", &particle_count, 1, 1, 1000);
-                                               ImGui::DragFloat("Smoothing radius", &push.smoothing_radius, 0.001f,
-                                                                0.01f, 5.0f);
-                                               /*ImGui::DragFloat("Minus", &push.minus, 0.1f, 0.0f);*/
-                                               /*ImGui::DragFloat("Derive", &push.derive, 0.1f, 0.0f);*/
+                                               /*ImGui::DragFloat("Particle Spacing", &particle_spacing, 1, 1, 10);*/
+                                               /*ImGui::DragFloat("Particle Scale", &particle_scale);*/
+                                               /*ImGui::DragInt("Particle Count", &particle_count, 1, 1, 1000);*/
+                                               /*ImGui::DragFloat("Smoothing radius", &push.smoothing_radius, 0.001f,*/
+                                               /*                 0.01f, 5.0f);*/
                                            }});
 
             engine.end_frame(frame);

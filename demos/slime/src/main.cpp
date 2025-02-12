@@ -153,7 +153,15 @@ int main()
 
         slime_img.copy_to(cmd, *draw_img);
 
-        imgui_renderer.render(frame, {[]() { ImGui::Text("Helo"); }});
+        imgui_renderer.render(frame, {[&settings]() {
+                                  ImGui::Text("Helo");
+                                  ImGui::DragFloat("Speed", &settings->movement_speed, 0.01f);
+                                  ImGui::DragInt("Sensor Distance", &settings->sensor_distance, 0.01f);
+                                  ImGui::DragInt("Sensor Size", &settings->sensor_size);
+
+                                  ImGui::DragFloat("Sensor Angle Spacing", &settings->sensor_angle_spacing, 0.01f);
+                                  ImGui::DragFloat("Turn Speed", &settings->turn_speed, 0.01f);
+                              }});
 
         engine.end_frame(frame);
 
@@ -163,6 +171,9 @@ int main()
         delta_time = dur.count();
         time += delta_time;
     }
+#ifndef NDEBUG
+    vkDeviceWaitIdle(engine.core().device());
+#endif
 
     return 0;
 }
