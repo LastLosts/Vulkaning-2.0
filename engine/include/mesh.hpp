@@ -18,9 +18,9 @@ class Mesh
     [[nodiscard]] uint32_t index_count() const noexcept { return m_index_count; }
 
   private:
-    uint32_t m_index_count;
     GPUBuffer m_vertex_buffer;
 
+    uint32_t m_index_count;
     GPUBuffer m_index_buffer;
 
     VkDeviceAddress m_vertex_buffer_address;

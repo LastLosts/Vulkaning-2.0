@@ -221,7 +221,6 @@ int main()
             background.copy_to(frame.cmd, *frame.draw_img);
 
             // TODO: Some way to tell the engine not to clear the image
-
             renderer.render(ving::PrimitiveType::Circle, primitive_parameters, frame);
             engine.imgui_renderer().render(frame, {[&engine, &push]() {
                                                ImGui::Text("%f", engine.delta_time() * 1000.0f);

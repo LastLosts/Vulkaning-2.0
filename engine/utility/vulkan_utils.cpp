@@ -27,9 +27,11 @@ VkInstance create_vulkan_instance(std::span<const char *> required_extensions, s
     create_info.enabledExtensionCount = required_extensions.size();
     create_info.ppEnabledExtensionNames = required_extensions.data();
 
-    if (vkCreateInstance(&create_info, nullptr, &instance) != VK_SUCCESS)
+    VkResult r = vkCreateInstance(&create_info, nullptr, &instance);
+
+    if (r != VK_SUCCESS)
     {
-        std::cout << "Failed to create vulkan instance\n";
+        std::cout << "Failed to create vulkan instance :  " << r << '\n';
         return VK_NULL_HANDLE;
     }
 
@@ -171,6 +173,8 @@ VkFence create_vulkan_fence(VkDevice device, bool initial_state)
 
     return fence;
 }
+
+// TODO: Most of the stuff is hardcoded
 VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevice device, VkSurfaceKHR surface,
                                        VkExtent2D extent, uint32_t queue_family_count, uint32_t image_count)
 {
@@ -185,6 +189,16 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
 
     VkSurfaceCapabilitiesKHR surface_capabilites{};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surface_capabilites);
+
+    assert(!(surface_capabilites.maxImageCount != 0 && image_count < surface_capabilites.maxImageCount));
+
+    if (image_count < surface_capabilites.minImageCount)
+    {
+        std::cout << "Warning: prefered image count of " << image_count
+                  << " is less then vulkan surface capabilities min image count " << surface_capabilites.minImageCount
+                  << ", changing image count to surface capabilites min image count" << std::endl;
+        image_count = surface_capabilites.minImageCount;
+    }
 
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
     /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;*/
