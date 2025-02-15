@@ -7,7 +7,10 @@
 #include <iostream>
 #include <random>
 
+#include <glm/gtc/type_ptr.hpp>
+
 constexpr float gravity = 900.0f;
+static glm::vec3 particle_color = {0.1, 0.1, 0.1};
 
 static float collision_damping = 0.9f;
 
@@ -161,11 +164,12 @@ int main()
                 {
                     {0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE},
                     {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER},
+                    {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER},
                 },
             },
         };
 
-        PushContstants push{particle_count, 0.3f};
+        PushContstants push{particle_count, 0.2f};
 
         std::vector<glm::vec4> positions;
         positions.reserve(particle_count);
@@ -183,21 +187,25 @@ int main()
         ving::GPUBuffer particles_buffer{engine.core(), positions.size() * sizeof(glm::vec4),
                                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU};
 
+        ving::GPUBuffer velocities_buffer{engine.core(), positions.size() * sizeof(glm::vec4),
+                                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU};
+
         ving::Texture2D background{engine.core(),
                                    VkExtent2D{ving::Engine::initial_window_width, ving::Engine::initial_window_height},
                                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
                                    VMA_MEMORY_USAGE_GPU_ONLY, ving::RenderFrames::draw_image_format};
 
         particles_buffer.set_memory(positions.data(), positions.size() * sizeof(glm::vec4));
+        velocities_buffer.set_memory(velocities.data(), velocities.size() * sizeof(glm::vec4));
 
         ving::ShaderResources resources{engine.core().device(), bindings, VK_SHADER_STAGE_COMPUTE_BIT};
 
         resources.write_image(0, 0, background, VK_IMAGE_LAYOUT_GENERAL);
         resources.write_buffer(0, 1, particles_buffer);
+        resources.write_buffer(0, 2, velocities_buffer);
 
         ving::ComputePipeline density_background_render{engine.core(), resources, fluid_density,
                                                         sizeof(PushContstants)};
-
         while (engine.running())
         {
             /*if (engine.key_pressed(SDLK_SPACE))*/
@@ -221,18 +229,22 @@ int main()
             background.copy_to(frame.cmd, *frame.draw_img);
 
             // TODO: Some way to tell the engine not to clear the image
-            renderer.render(ving::PrimitiveType::Circle, primitive_parameters, frame);
+            engine.begin_rendering(frame, false);
+
+            renderer.render(frame, ving::PrimitiveType::Circle, primitive_parameters, particle_color);
             engine.imgui_renderer().render(frame, {[&engine, &push]() {
                                                ImGui::Text("%f", engine.delta_time() * 1000.0f);
+                                               ImGui::ColorEdit3("Particle Color", glm::value_ptr(particle_color));
                                                /*ImGui::DragFloat("Particle Spacing", &particle_spacing, 1, 1, 10);*/
                                                /*ImGui::DragFloat("Particle Scale", &particle_scale);*/
                                                /*ImGui::DragInt("Particle Count", &particle_count, 1, 1, 1000);*/
                                                /*ImGui::DragFloat("Smoothing radius", &push.smoothing_radius, 0.001f,*/
                                                /*                 0.01f, 5.0f);*/
                                            }});
-
+            engine.end_rendering(frame);
             engine.end_frame(frame);
         }
+
 #ifndef NDEBUG
         vkDestroyShaderModule(engine.core().device(), fluid_density, nullptr);
         vkDeviceWaitIdle(engine.core().device());

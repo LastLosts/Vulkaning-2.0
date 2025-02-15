@@ -35,6 +35,9 @@ class Engine
     FrameInfo begin_frame();
     void end_frame(FrameInfo frame);
 
+    void begin_rendering(FrameInfo &frame, bool clear);
+    void end_rendering(FrameInfo &frame);
+
     bool load_shader(const char *path, VkShaderModule &out_shader) const;
     void copy_buffer_to_buffer_immediate(const GPUBuffer &source, const GPUBuffer &destination) const;
 

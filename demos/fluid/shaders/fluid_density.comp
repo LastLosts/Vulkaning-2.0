@@ -15,6 +15,11 @@ layout(std140, set = 0, binding = 1) buffer ParticleBuffer
     vec4 positions[];
 };
 
+layout (std140, set = 0, binding = 2) buffer VelocityBuffer
+{
+    vec4 velocities[];
+};
+
 const float particle_mass = 1.0;
 
 const float pi = 3.14159265359;
@@ -54,7 +59,7 @@ float smoothing_kernel_poly6_derivative(vec2 position, float radius)
 {
     float dst_squared = position.x * position.x + position.y * position.y;
 
-    if (dst_squared < radius * radius)
+    if (radius * radius > dst_squared)
     {
         float f = radius * radius - dst_squared;
         float scale = -24.0 / (pi * pow(radius, 8));
@@ -70,11 +75,11 @@ vec2 calculate_gradient(vec2 point)
     for (int i = 0; i < pc.particle_count; ++i)
     {
         vec2 particle_position = vec2(positions[i].x, positions[i].y);
-        float particle_property = cos(positions[i].y - 3 + sin(positions[i].x));
+        float particle_property = cos(particle_position.y * 5.5 + sin(particle_position.x * 13));
         vec2 dir = normalize(particle_position - point);
-        float slope = smoothing_kernel_poly6_derivative(particle_position, pc.smoothing_radius);
+        float slope = smoothing_kernel_poly6_derivative(particle_position - point, pc.smoothing_radius);
     
-        property_gradient += -particle_property * dir * slope / positions[i].z;
+        property_gradient += particle_property * dir * slope / positions[i].z;
     }
 
     return property_gradient;
@@ -86,15 +91,58 @@ float calculate_property(vec2 point)
     
     for(int i = 0; i < pc.particle_count; i++)
     {
-        float particle_property = cos(positions[i].y - 3 + sin(positions[i].x));
-
+        float particle_property = cos(positions[i].y - 3 + sin(positions[i].x * 3));
         float influense = smoothing_kernel_poly6(vec2(positions[i].x, positions[i].y) - point, pc.smoothing_radius);
 
+        // positions[i].z is particle density precalculated
         property += influense * particle_property / positions[i].z;
     }
 
     return property;
 }
+
+float calculate_density(vec2 point)
+{
+    float density = 0.0;
+
+    for (int i = 0; i < pc.particle_count; i++)
+    {
+        density += smoothing_kernel_poly6(vec2(positions[i].x, positions[i].y) - point, pc.smoothing_radius);
+    }
+    return density;
+}
+
+
+const float target_density = 100.75;
+const float pressure_multiplier = 0.5;
+float convert_density_to_pressure(float density)
+{
+    float density_delta = density - target_density;
+    float pressure = density_delta * pressure_multiplier;
+    return pressure;
+}
+vec2 calculate_pressure_force(vec2 point)
+{
+    vec2 pressure_force = vec2(0);
+
+    for (int i = 0; i < pc.particle_count; ++i)
+    {
+        vec2 particle_position = vec2(positions[i].x, positions[i].y);
+        float particle_property = cos(particle_position.y * 5.5 + sin(particle_position.x * 13));
+        vec2 dir = normalize(particle_position - point);
+        float slope = smoothing_kernel_poly6_derivative(particle_position - point, pc.smoothing_radius);
+        float density = positions[i].z;
+    
+        pressure_force += convert_density_to_pressure(density) * dir * slope / density;
+    }
+
+    return pressure_force;
+}
+
+const vec3 negative_density_col = vec3(0.2, 0.2, 0.8);
+const vec3 positive_density_col = vec3(0.8, 0.2, 0.2);
+const vec3 normal_density_col = vec3(0.8, 0.8, 0.8);
+const float density_normal_deviation = 10.0;
 
 void main()
 {
@@ -105,12 +153,27 @@ void main()
 
     if (texel_coord.x < image_size.x && texel_coord.y < image_size.y)
     {
-        // float property = calculate_property(position);
-
-        vec2 property_gradient = calculate_gradient(position);
-        imageStore(image, texel_coord, vec4(property_gradient, 0, 1.0));
-
+        // float property = cos(position.y * 5.5 + sin(position.x * 13));
         // imageStore(image, texel_coord, property * vec4(1.0)); 
-        // imageStore(image, texel_coord, (density + 100.0) / 900.0 * vec4(1.0, 1.0, 1.0, 1.0));
+
+        float pressure = convert_density_to_pressure(calculate_density(position));
+
+        // vec2 pressure_force = calculate_pressure_force(position);
+        // imageStore(image, texel_coord, vec4(normalize(property_gradient), 0, 1.0));
+    
+        float density_delta = pressure - target_density;
+
+        vec4 col;
+
+        if (density_delta < 0)
+        {
+            col = vec4(mix(normal_density_col, negative_density_col, -density_delta / density_normal_deviation), 1.0);
+        }
+        else
+        {
+            col = vec4(mix(normal_density_col, positive_density_col, density_delta / density_normal_deviation), 1.0);
+        }
+
+        imageStore(image, texel_coord, col);
     }
 }

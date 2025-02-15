@@ -57,7 +57,10 @@ class PrimitivesRenderer
   public:
     PrimitivesRenderer(const VulkanCore &core);
 
-    void render(PrimitiveType type, std::span<PrimitiveParameters> parameters, const FrameInfo &frame);
+    // set color if you want to override the color
+    void render(const FrameInfo &frame, PrimitiveType type, std::span<PrimitiveParameters> parameters,
+                glm::vec3 color = glm::vec3{-1});
+
     void render_3d(PrimitiveType3D type, std::span<PrimitiveParameters3D> parameters, const FrameInfo &frame,
                    PerspectiveCamera &camera);
 

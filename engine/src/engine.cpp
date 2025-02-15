@@ -65,6 +65,59 @@ void Engine::end_frame(FrameInfo frame)
     m_time = engine_duration.count();
 }
 
+void Engine::begin_rendering(FrameInfo &frame, bool clear)
+{
+    VkCommandBuffer cmd = frame.cmd;
+    Texture2D *draw_img = frame.draw_img;
+
+    draw_img->transition_layout(cmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+    VkClearValue clear_color{};
+    clear_color.color = VkClearColorValue{0.1f, 0.1f, 0.1f, 0.0f};
+
+    VkRenderingAttachmentInfo color_attachment{};
+    color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    color_attachment.imageView = draw_img->view();
+    color_attachment.imageLayout = draw_img->layout();
+
+    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+
+    if (clear)
+    {
+        color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        color_attachment.clearValue = clear_color;
+    }
+
+    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+    VkRenderingInfo render_info{};
+    render_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    render_info.renderArea = VkRect2D{{0, 0}, draw_img->extent()};
+    render_info.layerCount = 1;
+    render_info.colorAttachmentCount = 1;
+    render_info.pColorAttachments = &color_attachment;
+
+    vkCmdBeginRendering(cmd, &render_info);
+
+    VkViewport viewport{};
+    viewport.width = m_window.width();
+    viewport.height = m_window.height();
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = render_info.renderArea.extent;
+
+    vkCmdSetViewport(cmd, 0, 1, &viewport);
+    vkCmdSetScissor(cmd, 0, 1, &scissor);
+}
+
+void Engine::end_rendering(FrameInfo &frame)
+{
+    vkCmdEndRendering(frame.cmd);
+}
+
 bool Engine::load_shader(const char *path, VkShaderModule &out_shader) const
 {
     return load_vulkan_shader_module(m_core.device(), path, out_shader);

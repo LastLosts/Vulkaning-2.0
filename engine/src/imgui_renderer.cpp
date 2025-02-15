@@ -79,30 +79,9 @@ void ImGuiRenderer::render(const FrameInfo &frame, const std::vector<std::functi
     }
 
     ImGui::EndFrame();
-
     ImGui::Render();
 
     VkCommandBuffer cmd = frame.cmd;
-
-    VkRenderingAttachmentInfo color_attachment{};
-    color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-    color_attachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    color_attachment.imageView = frame.draw_img->view();
-
-    VkRenderingInfo render_info{};
-    render_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-    render_info.layerCount = 1;
-    render_info.renderArea = VkRect2D{VkOffset2D{0, 0}, frame.draw_img->extent()};
-    render_info.colorAttachmentCount = 1;
-    render_info.pColorAttachments = &color_attachment;
-
-    frame.draw_img->transition_layout(cmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    vkCmdBeginRendering(cmd, &render_info);
-
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
-
-    vkCmdEndRendering(cmd);
 }
 } // namespace ving
