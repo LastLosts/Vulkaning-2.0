@@ -1,7 +1,6 @@
 #include "render_frames.hpp"
 #include "utility/vulkan_utils.hpp"
 #include <iostream>
-#include <vulkan/vulkan_core.h>
 
 #include <chrono>
 

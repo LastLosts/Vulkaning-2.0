@@ -1,11 +1,7 @@
 #include "vulkan_utils.hpp"
 #include <cassert>
-#include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
-#include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {

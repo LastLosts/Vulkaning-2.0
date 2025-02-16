@@ -1,7 +1,5 @@
 #include "shader_resources.hpp"
 #include <cassert>
-#include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
@@ -41,7 +39,7 @@ ShaderResources::ShaderResources(VkDevice device, std::span<ShaderBindingSet> se
         VkDescriptorSetLayout layout{};
 
         if (vkCreateDescriptorSetLayout(m_device, &layout_info, nullptr, &layout) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create descriptor set layout");
+            std::cout << "Failed to create descriptor set layout\n";
 
         assert(layout != VK_NULL_HANDLE);
 
@@ -55,7 +53,7 @@ ShaderResources::ShaderResources(VkDevice device, std::span<ShaderBindingSet> se
     pool_info.pPoolSizes = sizes.data();
 
     if (vkCreateDescriptorPool(m_device, &pool_info, nullptr, &m_pool) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create descriptor pool");
+        std::cout << "Failed to create descriptor pool\n";
 
     VkDescriptorSetAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -65,7 +63,7 @@ ShaderResources::ShaderResources(VkDevice device, std::span<ShaderBindingSet> se
 
     m_sets.resize(m_layouts.size());
     if (vkAllocateDescriptorSets(m_device, &alloc_info, m_sets.data()) != VK_SUCCESS)
-        throw std::runtime_error("Failed to allocate descriptor sets");
+        std::cout << "Failed to allocate descriptor sets\n";
 }
 ShaderResources::~ShaderResources()
 {

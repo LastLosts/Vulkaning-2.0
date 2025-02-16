@@ -118,7 +118,8 @@ vec2 calculate_pressure_force(vec2 point)
 const vec3 negative_density_col = vec3(0.2, 0.2, 0.8);
 const vec3 positive_density_col = vec3(0.8, 0.2, 0.2);
 const vec3 normal_density_col = vec3(0.8, 0.8, 0.8);
-const float density_normal_deviation = 50.0;
+// const vec3 normal_density_col = vec3(0.0, 0.0, 0.0);
+const float density_normal_deviation = 500.0;
 
 void main()
 {

@@ -3,8 +3,6 @@
 
 #include "utility/vulkan_utils.hpp"
 #include <iostream>
-#include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
@@ -41,7 +39,7 @@ uint32_t Swapchain::acquire_image(VkSemaphore image_acquire_semaphore)
     uint32_t index{};
     if (vkAcquireNextImageKHR(m_device, m_swapchain, 10000000000, image_acquire_semaphore, nullptr, &index) !=
         VK_SUCCESS)
-        throw std::runtime_error("Failed to acquire swapchain image, probably it was timeout");
+        std::cout << "Failed to acquire swapchain image, probably it was timeout\n";
     return index;
 }
 
@@ -71,7 +69,7 @@ void Swapchain::present_image(VkSemaphore wait_semaphore, uint32_t acquire_image
 
     if (vkQueuePresentKHR(m_present_queue, &info) != VK_SUCCESS)
     {
-        throw std::runtime_error("Failed to present image");
+        std::cout << "Failed to present image\n";
     }
 }
 } // namespace ving

@@ -1,23 +1,23 @@
 #include "vulkan_instance.hpp"
-#include "SDL3/SDL_init.h"
-#include "SDL3/SDL_vulkan.h"
+
+#include "GLFW/glfw3.h"
 #include "utility/vulkan_utils.hpp"
-#include <stdexcept>
+#include <iostream>
 #include <vector>
 
 namespace ving
 {
 VulkanInstance::VulkanInstance()
 {
-    if (!SDL_Init(SDL_INIT_VIDEO))
-        throw std::runtime_error("Failed to initialize SDL");
+    if (!glfwInit())
+        std::cout << "Failed to initialize glfw\n";
 
     std::vector<const char *> instance_layers{
         "VK_LAYER_KHRONOS_validation",
     };
 
     uint32_t count;
-    const char *const *window_extensions = SDL_Vulkan_GetInstanceExtensions(&count);
+    const char *const *window_extensions = glfwGetRequiredInstanceExtensions(&count);
     std::vector<const char *> instance_extensions{};
     instance_extensions.reserve(count);
 

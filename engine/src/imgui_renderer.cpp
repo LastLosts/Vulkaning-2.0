@@ -1,9 +1,7 @@
 #include "imgui_renderer.hpp"
-#include "backends/imgui_impl_sdl3.h"
+#include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
-#include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
@@ -32,10 +30,10 @@ ImGuiRenderer::ImGuiRenderer(const VulkanCore &core, const Window &window, const
     pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     if (vkCreateDescriptorPool(m_device, &pool_info, nullptr, &m_pool) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create descriptor pool for imgui. Do proper error handling");
+        std::cout << "Failed to create descriptor pool for imgui. Do proper error handling\n";
 
     ImGui::CreateContext();
-    ImGui_ImplSDL3_InitForVulkan(window.window());
+    ImGui_ImplGlfw_InitForVulkan(window.window(), false);
 
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.Instance = core.instance();
@@ -62,7 +60,7 @@ ImGuiRenderer::~ImGuiRenderer()
     vkDeviceWaitIdle(m_device);
 
     ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
     vkDestroyDescriptorPool(m_device, m_pool, nullptr);
 }
@@ -70,7 +68,7 @@ ImGuiRenderer::~ImGuiRenderer()
 void ImGuiRenderer::render(const FrameInfo &frame, const std::vector<std::function<void()>> &imgui_functions) const
 {
     ImGui_ImplVulkan_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     for (auto &&func : imgui_functions)

@@ -1,10 +1,8 @@
-#include <vulkan/vulkan_core.h>
 #define VMA_IMPLEMENTATION
 #include "vulkan_core.hpp"
 
 #include "utility/vulkan_utils.hpp"
 #include <algorithm>
-#include <stdexcept>
 #include <vector>
 
 namespace ving
@@ -37,7 +35,7 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
     if (graphics_it != queue_family_properties.end())
         m_graphics_queue_family = std::distance(queue_family_properties.begin(), graphics_it);
     else
-        throw std::runtime_error("Failed to find transfer queue");
+        std::cout << "Failed to find graphics queue\n";
 
     uint32_t transfer_queue_family{};
     auto transfer_it =
@@ -46,7 +44,7 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
     if (transfer_it != queue_family_properties.end())
         transfer_queue_family = std::distance(queue_family_properties.begin(), transfer_it);
     else
-        throw std::runtime_error("Failed to find transfer queue");
+        std::cout << "Failed to find transfer queue\n";
 
     float queue_priority = 1.0f;
 
@@ -62,7 +60,7 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
     }
     if (!supported)
     {
-        throw std::runtime_error("Failed to find present queue");
+        std::cout << "Failed to find present queue\n";
     }
 
     std::vector<uint32_t> queue_families{m_graphics_queue_family, transfer_queue_family, m_present_queue_family};

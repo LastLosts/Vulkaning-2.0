@@ -1,6 +1,5 @@
 #include "graphics_pipeline.hpp"
 #include "render_frames.hpp"
-#include <stdexcept>
 
 namespace ving
 {
@@ -29,7 +28,9 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
     }
 
     if (vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_layout) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create pipeline layout. Do proper error handling");
+    {
+        std::cout << "Failed to create pipeline layout\n";
+    }
 
     VkPipelineShaderStageCreateInfo vertex_shader_info{};
     vertex_shader_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -132,7 +133,7 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
     pipeline_info.pNext = &render_info;
 
     if (vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create graphics pipeline. Do proper error handling");
+        std::cout << "Failed to create graphics pipeline. Do proper error handling\n";
 }
 GraphicsPipline::~GraphicsPipline()
 {

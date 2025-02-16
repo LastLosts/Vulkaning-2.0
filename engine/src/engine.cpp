@@ -1,15 +1,9 @@
 #include "engine.hpp"
-#include "SDL3/SDL_events.h"
-#include "backends/imgui_impl_sdl3.h"
-#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
 #include "utility/vulkan_utils.hpp"
-#include <algorithm>
-#include <iostream>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
-
 Engine::Engine()
     : m_window{m_instance, 1280, 720}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window},
       m_imgui_renderer{m_core, m_window, m_render_frames}, m_delta_time{0.016f}, m_time{0.0f}
@@ -23,29 +17,10 @@ FrameInfo Engine::begin_frame()
     // TODO: Add begin rendering
     m_frame_start_time = std::chrono::high_resolution_clock::now();
 
-    SDL_Event event;
+    m_running = !glfwWindowShouldClose(m_window.window());
 
-    m_keys_pressed.clear();
+    glfwPollEvents();
 
-    while (SDL_PollEvent(&event))
-    {
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT: {
-            m_running = false;
-            break;
-        }
-        case SDL_EVENT_KEY_DOWN: {
-            m_keys_pressed.push_back(event.key.key);
-            break;
-        }
-        case SDL_EVENT_KEY_UP: {
-            break;
-        }
-        }
-
-        ImGui_ImplSDL3_ProcessEvent(&event);
-    }
     FrameInfo frame = m_render_frames.begin_frame();
 
     return frame;

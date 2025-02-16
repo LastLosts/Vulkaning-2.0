@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SDL3/SDL_video.h"
 #include "vulkan_instance.hpp"
-#include <vulkan/vulkan_core.h>
+
+#include "GLFW/glfw3.h"
 
 namespace ving
 {
@@ -22,7 +22,7 @@ class Window
     [[nodiscard]] uint32_t height() const noexcept { return m_height; }
     [[nodiscard]] uint32_t width() const noexcept { return m_width; }
     [[nodiscard]] VkSurfaceKHR vulkan_surface() const { return m_surface; }
-    [[nodiscard]] SDL_Window *window() const { return m_window; }
+    [[nodiscard]] GLFWwindow *window() const { return m_window; }
 
   private:
     VkInstance m_instance;
@@ -30,7 +30,7 @@ class Window
     uint32_t m_width;
     uint32_t m_height;
 
-    SDL_Window *m_window;
+    GLFWwindow *m_window;
 
     VkSurfaceKHR m_surface;
 };

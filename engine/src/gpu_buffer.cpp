@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
@@ -21,7 +20,7 @@ GPUBuffer::GPUBuffer(const VulkanCore &core, size_t allocation_size, VkBufferUsa
     alloc_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
     if (vmaCreateBuffer(core.allocator(), &buffer_info, &alloc_info, &m_buffer, &m_allocation, nullptr) != VK_SUCCESS)
-        throw std::runtime_error("Failed to create buffer. Do proper error handling");
+        std::cout << "Failed to create buffer. Do proper error handling\n";
 }
 GPUBuffer::~GPUBuffer()
 {

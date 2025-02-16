@@ -1,10 +1,8 @@
 #include "compute_pipeline.hpp"
 #include <iostream>
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {
-
 ComputePipeline::ComputePipeline(const VulkanCore &core, const ShaderResources &shader_resources,
                                  VkShaderModule compute_shader, uint32_t push_constants_size)
     : m_device{core.device()}, m_push_constants_size{push_constants_size}
@@ -27,7 +25,7 @@ ComputePipeline::ComputePipeline(const VulkanCore &core, const ShaderResources &
 
     if (vkCreatePipelineLayout(m_device, &layout_info, nullptr, &m_layout) != VK_SUCCESS)
     {
-        std::cout << "Failed to create compute pipeline layout. Do proper error handling.\n";
+        std::cout << "Failed to create compute pipeline layout\n";
         exit(-1);
     }
 
@@ -43,7 +41,10 @@ ComputePipeline::ComputePipeline(const VulkanCore &core, const ShaderResources &
     pipeline_info.stage = shader_stage;
 
     if (vkCreateComputePipelines(m_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline))
-        throw std::runtime_error("Failed to create compute pipeline. Do proper error handling.");
+    {
+        std::cout << "Failed to create compute pipeline\n";
+        exit(-1);
+    }
 }
 ComputePipeline::ComputePipeline(const VulkanCore &core, VkShaderModule compute_shader, uint32_t push_constants_size)
     : m_device{core.device()}, m_push_constants_size{push_constants_size}
@@ -79,7 +80,9 @@ ComputePipeline::ComputePipeline(const VulkanCore &core, VkShaderModule compute_
     pipeline_info.stage = shader_stage;
 
     if (vkCreateComputePipelines(m_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline))
-        throw std::runtime_error("Failed to create compute pipeline. Do proper error handling.");
+    {
+        std::cout << "Failed to create compute pipeline. Do proper error handling.";
+    }
 }
 
 ComputePipeline::~ComputePipeline()

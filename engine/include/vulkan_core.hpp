@@ -2,20 +2,11 @@
 
 #include "vk_mem_alloc.h"
 #include "window.hpp"
-#include <format>
 #include <functional>
-#include <stdexcept>
+#include <iostream>
 
 namespace ving
 {
-static void check_vk_result(VkResult err)
-{
-    if (err = VK_SUCCESS)
-        return;
-    std::string error_msg = std::format("Vulkan function failed with code: {}", static_cast<uint32_t>(err));
-    throw std::runtime_error(error_msg);
-}
-
 class VulkanCore
 {
   public:

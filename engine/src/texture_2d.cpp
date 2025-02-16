@@ -1,6 +1,5 @@
 #include "texture_2d.hpp"
 #include "utility/vulkan_utils.hpp"
-#include <vulkan/vulkan_core.h>
 
 namespace ving
 {

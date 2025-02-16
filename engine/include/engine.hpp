@@ -1,14 +1,11 @@
 #pragma once
 
-#include "SDL3/SDL_keycode.h"
-#include "gpu_buffer.hpp"
-#include "imgui_renderer.hpp"
-#include "render_frames.hpp"
-#include "vulkan_core.hpp"
-#include "vulkan_instance.hpp"
+#include <chrono>
+
 #include "window.hpp"
 
-#include <chrono>
+#include "gpu_buffer.hpp"
+#include "imgui_renderer.hpp"
 
 namespace ving
 {
@@ -26,11 +23,6 @@ class Engine
 
     [[nodiscard]] const VulkanCore &core() const noexcept { return m_core; }
     [[nodiscard]] const ImGuiRenderer &imgui_renderer() const noexcept { return m_imgui_renderer; }
-
-    bool key_pressed(SDL_Keycode code)
-    {
-        return std::find(m_keys_pressed.begin(), m_keys_pressed.end(), code) != m_keys_pressed.end();
-    }
 
     FrameInfo begin_frame();
     void end_frame(FrameInfo frame);
@@ -61,9 +53,6 @@ class Engine
     std::chrono::high_resolution_clock::time_point m_frame_end_time;
 
     float m_record_commands_time;
-
-    // Keys pressed in a frame
-    std::vector<SDL_Keycode> m_keys_pressed;
 };
 
 } // namespace ving
