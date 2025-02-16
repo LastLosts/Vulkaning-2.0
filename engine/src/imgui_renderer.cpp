@@ -33,7 +33,7 @@ ImGuiRenderer::ImGuiRenderer(const VulkanCore &core, const Window &window, const
         std::cout << "Failed to create descriptor pool for imgui. Do proper error handling\n";
 
     ImGui::CreateContext();
-    ImGui_ImplGlfw_InitForVulkan(window.window(), false);
+    ImGui_ImplGlfw_InitForVulkan(window.window(), true);
 
     ImGui_ImplVulkan_InitInfo init_info{};
     init_info.Instance = core.instance();
@@ -52,13 +52,11 @@ ImGuiRenderer::ImGuiRenderer(const VulkanCore &core, const Window &window, const
     init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &RenderFrames::draw_image_format;
 
     ImGui_ImplVulkan_Init(&init_info);
-
     ImGui_ImplVulkan_CreateFontsTexture();
 }
 ImGuiRenderer::~ImGuiRenderer()
 {
     vkDeviceWaitIdle(m_device);
-
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
