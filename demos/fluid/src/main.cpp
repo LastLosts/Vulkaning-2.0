@@ -78,9 +78,10 @@ int main()
     float smoothing_in_pixels_x = push.smoothing_radius * ving::Engine::initial_window_width;
     float smoothing_in_pixels_y = push.smoothing_radius * ving::Engine::initial_window_height;
 
+    float cpu_update_time;
+
     while (engine.running())
     {
-        grid.update(push.smoothing_radius, push.target_density, push.pressure_multiplier, engine.delta_time());
 
         primitive_parameters.clear();
 
@@ -125,9 +126,20 @@ int main()
         }
 #endif
 
-        memcpy(gpu_particles_buffer, grid.particles().data(), grid.particles().size() * sizeof(glm::vec4));
-
         ving::FrameInfo frame = engine.begin_frame();
+
+        auto s = std::chrono::high_resolution_clock::now();
+        memcpy(gpu_particles_buffer, grid.particles().data(), grid.particles().size() * sizeof(glm::vec4));
+        auto e = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<float> dur = e - s;
+        float copying_buffer_time = dur.count();
+
+        s = std::chrono::high_resolution_clock::now();
+        if (simulate)
+            grid.update(push.smoothing_radius, push.target_density, push.pressure_multiplier, engine.delta_time());
+        e = std::chrono::high_resolution_clock::now();
+        dur = e - s;
+        cpu_update_time = dur.count();
 
         // Background rendering
         background.transition_layout(frame.cmd, VK_IMAGE_LAYOUT_GENERAL);
@@ -145,8 +157,10 @@ int main()
 
         engine.imgui_renderer().render(
             frame, {
-                       [&engine, &grid]() {
+                       [&engine, &grid, cpu_update_time, &simulate, copying_buffer_time]() {
                            ImGui::Text("%f", engine.delta_time() * 1000.0f);
+                           ImGui::Text("Cpu update: %f", cpu_update_time * 1000.0f);
+                           ImGui::Text("Copying buffer: %f", copying_buffer_time * 1000.0f);
                            ImGui::ColorEdit3("Particle Color", glm::value_ptr(particle_color));
                            ImGui::DragFloat("Target Density", &push.target_density, 0.1f, 0.0f);
                            ImGui::DragFloat("Pressure multiplier", &push.pressure_multiplier, 0.01f, 0.0f);
@@ -156,7 +170,7 @@ int main()
                            /*ImGui::Text("%f", grid.particles()[0].density);*/
 
                            /*ImGui::DragInt2("Coord: ", glm::value_ptr(cell_coords), 1, 0, grid.cells_size() - 1);*/
-                           /*ImGui::Checkbox("Actual:", &render_p);*/
+                           ImGui::Checkbox("Simulate:", &simulate);
 
                            /*ImGui::DragFloat("Particle Spacing", &particle_spacing, 1, 1, 10);*/
                            /*ImGui::DragFloat("Particle Scale", &particle_scale);*/

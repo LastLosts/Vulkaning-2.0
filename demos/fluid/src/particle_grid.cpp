@@ -55,17 +55,21 @@ void ParticleGrid::update(float smoothing_radius, float target_density, float pr
 void ParticleGrid::update_particles(float smoothing_radius, float target_density, float pressure_multiplier,
                                     float delta_time)
 {
-    for (size_t i = 0; i < m_particles.size(); ++i)
+    std::vector<std::vector<uint32_t>> particle_neighbours;
+    particle_neighbours.reserve(m_particles.size());
+    for (uint32_t i = 0; i < m_particles.size(); ++i)
     {
-        std::vector<uint32_t> neighbour_indices = get_neighbour_particle_indices(particle_cell_coords(m_particles[i]));
-        m_particles[i].density = calculate_density(m_particles, neighbour_indices, i, smoothing_radius);
+        particle_neighbours.push_back(get_neighbour_particle_indices(particle_cell_coords(m_particles[i])));
     }
 
     for (size_t i = 0; i < m_particles.size(); ++i)
     {
-        std::vector<uint32_t> neighbour_indices = get_neighbour_particle_indices(particle_cell_coords(m_particles[i]));
+        m_particles[i].density = calculate_density(m_particles, particle_neighbours[i], i, smoothing_radius);
+    }
 
-        m_particles[i].velocity = calculate_pressure_force(m_particles, neighbour_indices, i, smoothing_radius,
+    for (size_t i = 0; i < m_particles.size(); ++i)
+    {
+        m_particles[i].velocity = calculate_pressure_force(m_particles, particle_neighbours[i], i, smoothing_radius,
                                                            target_density, pressure_multiplier);
 
         constexpr bool gravity_on = true;
