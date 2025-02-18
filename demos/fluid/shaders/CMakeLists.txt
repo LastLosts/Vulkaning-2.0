@@ -5,8 +5,8 @@ find_program(
 file(GLOB_RECURSE GLSL_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.frag"
      "${CMAKE_CURRENT_SOURCE_DIR}/*.vert" "${CMAKE_CURRENT_SOURCE_DIR}/*.comp")
 
+message(STATUS "BUILDING SHADERS for fluid")
 foreach(GLSL ${GLSL_SOURCE_FILES})
-  message(STATUS "BUILDING SHADER")
   get_filename_component(FILE_NAME ${GLSL} NAME)
   set(SPIRV "${CMAKE_CURRENT_SOURCE_DIR}/spirv/${FILE_NAME}.spv")
   message(STATUS ${GLSL})

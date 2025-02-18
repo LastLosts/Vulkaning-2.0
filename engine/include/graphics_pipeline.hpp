@@ -11,7 +11,8 @@ class GraphicsPipline
   public:
     GraphicsPipline();
     GraphicsPipline(const VulkanCore &core, const ShaderResources &resources, uint32_t push_constant_size,
-                    VkShaderModule vertex_shader, VkShaderModule fragment_shader);
+                    VkShaderModule vertex_shader, VkShaderModule fragment_shader,
+                    VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL);
     ~GraphicsPipline();
 
     GraphicsPipline(const GraphicsPipline &) = delete;

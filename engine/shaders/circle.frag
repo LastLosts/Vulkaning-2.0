@@ -11,8 +11,6 @@ void main()
 
     float fade = 0.01;
 
-    out_frag_color = vec4(center_uv, 0.0, 1.0); 
-
     float distance = 1.0 - length(center_uv);
     vec4 circle = vec4(smoothstep(0.0, fade, distance));
 

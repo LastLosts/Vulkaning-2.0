@@ -81,6 +81,8 @@ VkDevice create_vulkan_device(VkPhysicalDevice physical_device, std::span<VkDevi
 
     VkPhysicalDeviceFeatures2 features2{};
     features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    features2.features.fillModeNonSolid = VK_TRUE;
+    features2.features.wideLines = VK_TRUE;
     features2.pNext = &features13;
 
     /*vkGetPhysicalDeviceFeatures2(physical_device, &features2);*/

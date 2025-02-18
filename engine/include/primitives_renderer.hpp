@@ -24,7 +24,8 @@ struct PrimitiveParameters3D
 
 enum class PrimitiveType
 {
-    Circle
+    Circle,
+    Square
 };
 enum class PrimitiveType3D
 {
@@ -72,6 +73,8 @@ class PrimitivesRenderer
 
     ShaderResources m_resources;
     GraphicsPipline m_circle_pipeline;
+    GraphicsPipline m_square_wire_pipeline;
+
     GraphicsPipline m_sphere_pipeline;
 };
 } // namespace ving

@@ -7,10 +7,10 @@ GraphicsPipline::GraphicsPipline() : m_device{nullptr}, m_pipeline{nullptr}, m_l
 {
 }
 GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &resources, uint32_t push_constant_size,
-                                 VkShaderModule vertex_shader, VkShaderModule fragment_shader)
+                                 VkShaderModule vertex_shader, VkShaderModule fragment_shader,
+                                 VkPolygonMode polygon_mode)
     : m_device{core.device()}, m_push_constants_size{push_constant_size}
 {
-
     VkPipelineLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_info.setLayoutCount = resources.layouts_size();
@@ -60,7 +60,7 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
 
     VkPipelineRasterizationStateCreateInfo rasterizer{};
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizer.polygonMode = polygon_mode;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;

@@ -16,7 +16,7 @@ class GPUBuffer
     GPUBuffer &operator=(GPUBuffer &&other) = delete;
 
     void *map_and_get_memory();
-    void set_memory(void *data, uint32_t size);
+    void set_memory(const void *data, uint32_t size);
 
     [[nodiscard]] VkBuffer buffer() const noexcept { return m_buffer; }
     [[nodiscard]] VkDeviceSize size() const noexcept { return m_size; }

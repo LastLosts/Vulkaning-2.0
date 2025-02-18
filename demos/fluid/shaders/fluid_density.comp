@@ -12,9 +12,19 @@ layout (push_constant) uniform constants
     float pressure_multiplier;
 } pc;
 
+struct Particle
+{
+    vec2 position;
+    vec2 velocity;
+
+    float density;
+    uint cell_id;
+    vec2 dummy;
+};
+
 layout(std140, set = 0, binding = 1) buffer ParticleBuffer
 {
-    vec4 positions[];
+    Particle particles[];
 };
 
 const float particle_mass = 1.0;
@@ -85,7 +95,7 @@ float calculate_density(vec2 point)
 
     for (int i = 0; i < pc.particle_count; i++)
     {
-        density += smoothing_kernel_spiky(vec2(positions[i].x, positions[i].y) - point, pc.smoothing_radius);
+        density += smoothing_kernel_spiky(particles[i].position - point, pc.smoothing_radius);
     }
     return density;
 }
@@ -103,11 +113,9 @@ vec2 calculate_pressure_force(vec2 point)
 
     for (int i = 0; i < pc.particle_count; ++i)
     {
-        vec2 particle_position = vec2(positions[i].x, positions[i].y);
-        float particle_property = cos(particle_position.y * 5.5 + sin(particle_position.x * 13));
-        vec2 dir = normalize(particle_position - point);
-        float slope = smoothing_kernel_spiky_derivative(particle_position - point, pc.smoothing_radius);
-        float density = positions[i].z;
+        vec2 dir = normalize(particles[i].position - point);
+        float slope = smoothing_kernel_spiky_derivative(particles[i].position - point, pc.smoothing_radius);
+        float density = particles[i].density;
     
         pressure_force += convert_density_to_pressure(density) * dir * slope / density;
     }

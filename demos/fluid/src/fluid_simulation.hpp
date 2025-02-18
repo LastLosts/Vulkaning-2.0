@@ -4,9 +4,12 @@
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
+#include "glm/gtc/random.hpp"
+#include "particle.hpp"
 
 #include <cmath>
 #include <cstdint>
+#include <random>
 #include <vector>
 
 static float smoothing_kernel_poly6(glm::vec2 position, float radius)
@@ -69,19 +72,19 @@ static float convert_density_to_pressure(float density, float target_density, fl
     return pressure;
 }
 
-static float calculate_density(const std::vector<glm::vec4> &positions, uint32_t particle_index, float smoothing_radius)
+static float calculate_density(const std::vector<Particle> &particles, const std::vector<uint32_t> &indices,
+                               uint32_t particle_index, float smoothing_radius)
 {
     float density = 0.0;
 
-    glm::vec2 point{positions[particle_index].x, positions[particle_index].y};
+    const glm::vec2 &point = particles[particle_index].position;
 
-    for (int i = 0; i < positions.size(); i++)
+    for (auto &&i : indices)
     {
         if (i == particle_index)
             continue;
 
-        /*density += smoothing_kernel_poly6(glm::vec2{positions[i].x, positions[i].y} - point, smoothing_radius);*/
-        density += smoothing_kernel_spiky(glm::vec2{positions[i].x, positions[i].y} - point, smoothing_radius);
+        density += smoothing_kernel_spiky(particles[i].position - point, smoothing_radius);
     }
 
     return density;
@@ -94,36 +97,39 @@ static float calculate_shared_pressure(float density_a, float density_b, float t
     float pressure_b = convert_density_to_pressure(density_b, target_density, pressure_multiplier);
     return (pressure_a + pressure_b) / 2.0f;
 }
-static glm::vec2 calculate_pressure_force(const std::vector<glm::vec4> &positions, int particle_index,
-                                          float smoothing_radius, float target_density, float pressure_multiplier)
+static glm::vec2 calculate_pressure_force(const std::vector<Particle> &particles, const std::vector<uint32_t> &indices,
+                                          int particle_index, float smoothing_radius, float target_density,
+                                          float pressure_multiplier)
 {
     glm::vec2 pressure_force{0.0f};
 
-    glm::vec2 point{positions[particle_index].x, positions[particle_index].y};
-    for (int i = 0; i < positions.size(); ++i)
+    const glm::vec2 &point = particles[particle_index].position;
+
+    std::random_device dev{};
+
+    for (auto &&i : indices)
     {
         if (i == particle_index)
             continue;
 
-        glm::vec2 particle_position{positions[i].x, positions[i].y};
-        glm::vec2 dir = glm::normalize(particle_position - point);
+        glm::vec2 dir = glm::normalize(particles[i].position - point);
 
-        /*if (glm::distance(particle_position, point) == 0)*/
-        /*{*/
-        /*    dir = glm::circularRand(1.0f);*/
-        /*}*/
+        if (glm::distance(particles[i].position, point) == 0)
+        {
+            dir = glm::circularRand(1.0f);
+        }
 
-        /*float slope = smoothing_kernel_poly6_derivative(particle_position - point, smoothing_radius);*/
-        float slope = smoothing_kernel_spiky_derivative(particle_position - point, smoothing_radius);
-        float density = positions[i].z;
+        float slope = smoothing_kernel_spiky_derivative(particles[i].position - point, smoothing_radius);
 
-        assert(density != 0);
+        float shared_pressure = calculate_shared_pressure(particles[i].density, particles[particle_index].density,
 
-        float shared_pressure =
-            calculate_shared_pressure(density, positions[particle_index].z, target_density, pressure_multiplier);
-
-        pressure_force += shared_pressure * dir * slope / density;
+                                                          target_density, pressure_multiplier);
+        pressure_force +=
+            shared_pressure * dir * slope / (particles[i].density + std::numeric_limits<float>::epsilon());
     }
+
+    assert(!std::isnan(pressure_force.x));
+    assert(!std::isnan(pressure_force.y));
 
     return pressure_force;
 }

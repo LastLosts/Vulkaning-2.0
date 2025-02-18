@@ -40,7 +40,7 @@ void *GPUBuffer::map_and_get_memory()
     return m_mapped_memory;
 }
 
-void GPUBuffer::set_memory(void *data, uint32_t size)
+void GPUBuffer::set_memory(const void *data, uint32_t size)
 {
     assert(m_size >= size);
 
