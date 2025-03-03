@@ -197,6 +197,8 @@ void ParticleGrid::generate_grid()
 
     uint32_t current_cell_id = 0, previous_cell_id = m_particles[0].cell_id, previous_index = 0;
 
+    std::fill(m_cells_entries.begin(), m_cells_entries.end(), CellsEntry{});
+
     for (uint32_t i = 0; i < m_particles.size(); ++i)
     {
         current_cell_id = m_particles[i].cell_id;
@@ -210,10 +212,16 @@ void ParticleGrid::generate_grid()
 
     m_cells_entries[current_cell_id] = {previous_index, static_cast<uint32_t>(m_particles.size() - previous_index)};
 
-    /*for (auto &&e : m_cells_entries)*/
-    /*{*/
-    /*    std::cout << e.start << ' ' << e.count << '\n';*/
-    /*}*/
+#ifndef NDEBUG
+    /*std::cout << "Cell entries\n";*/
+    uint32_t accum = 0;
+    for (auto &&e : m_cells_entries)
+    {
+        /*std::cout << e.start << ' ' << e.count << '\n';*/
+        accum += e.count;
+    }
+    assert(accum == m_particles.size());
+
     /*std::cout << '\n';*/
     /**/
     /*uint32_t ctr = 0;*/
@@ -229,6 +237,7 @@ void ParticleGrid::generate_grid()
     /*    ++ctr;*/
     /*}*/
     /*std::cout << '\n';*/
+#endif
 }
 glm::uvec2 ParticleGrid::particle_cell_coords(const Particle &particle)
 {

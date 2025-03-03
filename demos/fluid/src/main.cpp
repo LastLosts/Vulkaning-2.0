@@ -28,7 +28,7 @@ struct PushConstants
 };
 
 // Minimum smoothing radius is more then 0.1f because radix sort set up for only 2 digit numbers
-static PushConstants push{particle_count, 0.08f, 100.0f, 0.0001f};
+static PushConstants push{particle_count, 0.05f, 100.0f, 0.0001f};
 
 int main()
 {
@@ -106,18 +106,18 @@ int main()
         grid.generate_grid();
 
         // Render particles close to mouse
-        /*Particle part{*/
-        /*    {engine.cursor_pos().x / (float)ving::Engine::initial_window_width,*/
-        /*     engine.cursor_pos().y / (float)ving::Engine::initial_window_height},*/
-        /*    {},*/
-        /*    ParticleGrid::particle_scale * ving::Engine::initial_window_height,*/
-        /*};*/
-        /**/
-        /*std::vector<uint32_t> indices = grid.get_neighbour_particle_indices(part);*/
-        /*for (auto &&i : indices)*/
-        /*{*/
-        /*    primitive_parameters[i].color = {1.0f, 0.0f, 1.0f};*/
-        /*}*/
+        Particle part{
+            {engine.cursor_pos().x / (float)ving::Engine::initial_window_width,
+             engine.cursor_pos().y / (float)ving::Engine::initial_window_height},
+            {},
+            ParticleGrid::particle_scale * ving::Engine::initial_window_height,
+        };
+
+        std::vector<uint32_t> indices = grid.get_neighbour_particle_indices(part);
+        for (auto &&i : indices)
+        {
+            primitive_parameters[i].color = {1.0f, 0.0f, 1.0f};
+        }
 
         std::vector<TimeResult> results{};
         if (simulate)
