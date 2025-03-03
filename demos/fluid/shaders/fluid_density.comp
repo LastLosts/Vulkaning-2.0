@@ -16,13 +16,11 @@ struct Particle
 {
     vec2 position;
     vec2 velocity;
-
     float density;
     uint cell_id;
-    vec2 dummy;
 };
 
-layout(std140, set = 0, binding = 1) buffer ParticleBuffer
+layout(set = 0, binding = 1) buffer ParticleBuffer
 {
     Particle particles[];
 };
@@ -100,13 +98,13 @@ float calculate_density(vec2 point)
     return density;
 }
 
-
 float convert_density_to_pressure(float density)
 {
     float density_delta = density - pc.target_density;
     float pressure = density_delta * pc.pressure_multiplier;
     return pressure;
 }
+
 vec2 calculate_pressure_force(vec2 point)
 {
     vec2 pressure_force = vec2(0);
@@ -127,7 +125,7 @@ const vec3 negative_density_col = vec3(0.2, 0.2, 0.8);
 const vec3 positive_density_col = vec3(0.8, 0.2, 0.2);
 const vec3 normal_density_col = vec3(0.8, 0.8, 0.8);
 // const vec3 normal_density_col = vec3(0.0, 0.0, 0.0);
-const float density_normal_deviation = 500.0;
+const float density_normal_deviation = 400.0;
 
 void main()
 {
@@ -138,16 +136,19 @@ void main()
 
     if (texel_coord.x < image_size.x && texel_coord.y < image_size.y)
     {
-        // float property = cos(position.y * 5.5 + sin(position.x * 13));
-        // imageStore(image, texel_coord, property * vec4(1.0)); 
+        // Rendering just particles to Debug
+        // imageStore(image, texel_coord, vec4(0.0));
+        // for (int i = 0; i < pc.particle_count; ++i)
+        // {
+        //     if (length(position - particles[i].position) < 0.01)
+        //     {
+        //         imageStore(image, texel_coord, vec4(1.0));
+        //         break;
+        //     }
+        // }
 
-        float pressure = convert_density_to_pressure(calculate_density(position));
-
-        // vec2 pressure_force = calculate_pressure_force(position);
-        // imageStore(image, texel_coord, vec4(normalize(property_gradient), 0, 1.0));
-    
+        float pressure = calculate_density(position);
         float density_delta = pressure - pc.target_density;
-
         vec4 col;
 
         if (density_delta < 0)

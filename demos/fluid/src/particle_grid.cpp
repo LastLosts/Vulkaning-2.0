@@ -7,9 +7,12 @@
 #include <iostream>
 #include <random>
 
+#include <chrono>
+
 ParticleGrid::ParticleGrid(float grid_size)
 {
     m_cell_size = ceil(1.0f / grid_size);
+    std::cout << m_cell_size << '\n';
     m_grid_cell_size = grid_size;
     m_cells_entries.resize(m_cell_size * m_cell_size);
 }
@@ -46,26 +49,36 @@ void ParticleGrid::generate_particles_cube(size_t particle_count)
     }
 }
 
-void ParticleGrid::update(float smoothing_radius, float target_density, float pressure_multiplier, float delta_time)
+std::vector<TimeResult> ParticleGrid::update_particles(float smoothing_radius, float target_density,
+                                                       float pressure_multiplier, float delta_time)
 {
-    sort_particles();
-    update_particles(smoothing_radius, target_density, pressure_multiplier, delta_time);
-}
+    std::vector<TimeResult> results;
 
-void ParticleGrid::update_particles(float smoothing_radius, float target_density, float pressure_multiplier,
-                                    float delta_time)
-{
+    auto s = std::chrono::high_resolution_clock::now();
+
     std::vector<std::vector<uint32_t>> particle_neighbours;
     particle_neighbours.reserve(m_particles.size());
     for (uint32_t i = 0; i < m_particles.size(); ++i)
     {
-        particle_neighbours.push_back(get_neighbour_particle_indices(particle_cell_coords(m_particles[i])));
+        particle_neighbours.push_back(get_neighbour_particle_indices(m_particles[i]));
     }
+    auto e = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float> dur = e - s;
+    results.push_back({"Pregen neighbours", dur.count() * 1000.0f});
 
+    s = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < m_particles.size(); ++i)
     {
         m_particles[i].density = calculate_density(m_particles, particle_neighbours[i], i, smoothing_radius);
     }
+    e = std::chrono::high_resolution_clock::now();
+    dur = e - s;
+    results.push_back({"Calculate densities", dur.count() * 1000.0f});
+
+    s = std::chrono::high_resolution_clock::now();
+
+    glm::vec2 gravity_dir{0.0f, 1.0f};
+    glm::vec2 gravity_force{gravity * delta_time * gravity_dir};
 
     for (size_t i = 0; i < m_particles.size(); ++i)
     {
@@ -73,15 +86,25 @@ void ParticleGrid::update_particles(float smoothing_radius, float target_density
                                                            target_density, pressure_multiplier);
 
         constexpr bool gravity_on = true;
-
         if constexpr (gravity_on)
-            m_particles[i].velocity -= glm::vec2{0.0f, 1.0f} * gravity * delta_time;
+        {
+            m_particles[i].velocity = m_particles[i].velocity + gravity_force;
+        }
 
         m_particles[i].position = m_particles[i].position + delta_time * m_particles[i].velocity;
 
         constexpr bool collision = true;
+        constexpr bool damping = false;
 
-        if constexpr (collision)
+        if constexpr (!damping && collision)
+        {
+            m_particles[i].position.x =
+                glm::clamp(m_particles[i].position.x, particle_scale + offset, 1.0f - particle_scale - offset);
+            m_particles[i].position.y =
+                glm::clamp(m_particles[i].position.y, particle_scale + offset, 1.0f - particle_scale - offset);
+        }
+
+        if constexpr (damping && collision)
         {
             float bound_max{1.0f - offset - particle_scale / 2.0f};
 
@@ -109,8 +132,13 @@ void ParticleGrid::update_particles(float smoothing_radius, float target_density
             }
         }
     }
+    e = std::chrono::high_resolution_clock::now();
+    dur = e - s;
+    results.push_back({"Calculate pressure, colliions, gravity", dur.count() * 1000.0f});
+
+    return results;
 }
-std::vector<uint32_t> ParticleGrid::get_neighbour_particle_indices(glm::uvec2 cell_coords)
+std::vector<uint32_t> ParticleGrid::get_neighbour_particle_indices(const Particle &particle)
 {
     std::vector<uint32_t> indices{};
 
@@ -118,6 +146,8 @@ std::vector<uint32_t> ParticleGrid::get_neighbour_particle_indices(glm::uvec2 ce
     neighbour_entries.reserve(9);
 
     /*std::cout << "Indices entries: \n";*/
+
+    glm::uvec2 cell_coords = particle_cell_coords(particle);
 
     for (int x = -1; x <= 1; ++x)
     {
@@ -156,7 +186,7 @@ std::vector<uint32_t> ParticleGrid::get_neighbour_particle_indices(glm::uvec2 ce
     return indices;
 }
 
-void ParticleGrid::sort_particles()
+void ParticleGrid::generate_grid()
 {
     for (uint32_t i = 0; i < m_particles.size(); ++i)
     {

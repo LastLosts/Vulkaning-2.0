@@ -1,7 +1,9 @@
 build/
 build-vs/
+build-release/
 .cache/
 build.bat
 build.sh
+build-release.sh
 generate.bat
 .vscode/

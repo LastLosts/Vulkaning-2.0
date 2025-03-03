@@ -1,5 +1,6 @@
 #include "engine.hpp"
 
+#include "glm/common.hpp"
 #include "utility/vulkan_utils.hpp"
 
 namespace ving
@@ -14,12 +15,15 @@ Engine::Engine()
 
 FrameInfo Engine::begin_frame()
 {
-    // TODO: Add begin rendering
     m_frame_start_time = std::chrono::high_resolution_clock::now();
 
     m_running = !glfwWindowShouldClose(m_window.window());
 
     glfwPollEvents();
+    glfwGetCursorPos(m_window.window(), &m_cursor_x, &m_cursor_y);
+
+    m_cursor_x = glm::clamp(m_cursor_x, 0.0, (double)initial_window_width);
+    m_cursor_y = glm::clamp(m_cursor_y, 0.0, (double)initial_window_height);
 
     FrameInfo frame = m_render_frames.begin_frame();
 

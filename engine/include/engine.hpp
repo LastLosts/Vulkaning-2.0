@@ -2,6 +2,7 @@
 
 #include <chrono>
 
+#include "glm/ext/vector_float2.hpp"
 #include "window.hpp"
 
 #include "gpu_buffer.hpp"
@@ -20,6 +21,8 @@ class Engine
     [[nodiscard]] bool running() const noexcept { return m_running; }
     [[nodiscard]] float delta_time() const noexcept { return m_delta_time; }
     [[nodiscard]] float time() const noexcept { return m_time; }
+
+    [[nodiscard]] glm::vec2 cursor_pos() const { return {m_cursor_x, m_cursor_y}; }
 
     [[nodiscard]] const VulkanCore &core() const noexcept { return m_core; }
     [[nodiscard]] const ImGuiRenderer &imgui_renderer() const noexcept { return m_imgui_renderer; }
@@ -51,6 +54,9 @@ class Engine
     std::chrono::high_resolution_clock::time_point m_engine_creation_time;
     std::chrono::high_resolution_clock::time_point m_frame_start_time;
     std::chrono::high_resolution_clock::time_point m_frame_end_time;
+
+    double m_cursor_x;
+    double m_cursor_y;
 
     float m_record_commands_time;
 };

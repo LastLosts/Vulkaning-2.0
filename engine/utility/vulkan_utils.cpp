@@ -1,7 +1,9 @@
 #include "vulkan_utils.hpp"
 #include <cassert>
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <vulkan/vk_enum_string_helper.h>
 
 namespace ving
 {
@@ -11,7 +13,9 @@ VkInstance create_vulkan_instance(std::span<const char *> required_extensions, s
 
     VkApplicationInfo app_info{};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app_info.apiVersion = VK_API_VERSION_1_3;
+    app_info.apiVersion = VK_API_VERSION_1_4;
+    app_info.pApplicationName = "Idk";
+    app_info.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
     app_info.pEngineName = "Vulkaning Engine";
     app_info.engineVersion = VK_MAKE_VERSION(0, 0, 1);
 
@@ -27,7 +31,41 @@ VkInstance create_vulkan_instance(std::span<const char *> required_extensions, s
 
     if (r != VK_SUCCESS)
     {
-        std::cout << "Failed to create vulkan instance :  " << r << '\n';
+        std::cout << "Failed to create vulkan instance :  " << string_VkResult(r) << '\n';
+
+        if (r == VK_ERROR_LAYER_NOT_PRESENT)
+        {
+            uint32_t props_count;
+            vkEnumerateInstanceLayerProperties(&props_count, nullptr);
+            std::vector<VkLayerProperties> props;
+            props.resize(props_count);
+            vkEnumerateInstanceLayerProperties(&props_count, props.data());
+
+            std::cout << "Available layers:\n";
+            for (uint32_t i = 0; i < props_count; ++i)
+            {
+                std::cout << props[i].layerName << '\n';
+            }
+
+            std::cout << "Required layers:\n";
+
+            for (auto &&req_layer : required_layers)
+            {
+                std::cout << req_layer << '\n';
+            }
+
+            for (auto &&p : props)
+            {
+                for (auto &&req : required_layers)
+                {
+                    if (std::strcmp(p.layerName, req) == 0)
+                    {
+                        std::cout << "Found required layer in enumerated layer\n";
+                        std::cout << p.layerName << '\n';
+                    }
+                }
+            }
+        }
         return VK_NULL_HANDLE;
     }
 
@@ -198,8 +236,8 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
         image_count = surface_capabilites.minImageCount;
     }
 
-    VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
-    /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;*/
+    /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;*/
+    VkPresentModeKHR present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 
     VkSwapchainCreateInfoKHR info{};
     info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

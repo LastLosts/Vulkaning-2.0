@@ -32,5 +32,4 @@ VulkanInstance::~VulkanInstance()
 {
     vkDestroyInstance(instance, nullptr);
 }
-
 } // namespace ving

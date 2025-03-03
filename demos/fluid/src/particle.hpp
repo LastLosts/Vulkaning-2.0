@@ -8,5 +8,4 @@ struct Particle
     glm::vec2 velocity;
     float density;
     uint32_t cell_id;
-    glm::vec2 dummy;
 };

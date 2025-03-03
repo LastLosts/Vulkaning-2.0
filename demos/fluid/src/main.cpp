@@ -9,12 +9,13 @@
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-constexpr float gravity = 900.0f;
 static glm::vec3 particle_color = {0.1f, 0.1f, 0.1f};
+
+// TODO: Fixed time step
 
 static float collision_damping = 0.9f;
 static float particle_spacing = 15.0f;
-static int particle_count = 400;
+static int particle_count = 700;
 
 static std::vector<ving::PrimitiveParameters> primitive_parameters{};
 
@@ -26,8 +27,8 @@ struct PushConstants
     float pressure_multiplier;
 };
 
-// Minimum smoothing radius is 0.1f because radix sort set up for only 2 digit numbers
-static PushConstants push{particle_count, 0.3f, 100.0f, 0.001f};
+// Minimum smoothing radius is more then 0.1f because radix sort set up for only 2 digit numbers
+static PushConstants push{particle_count, 0.08f, 100.0f, 0.0001f};
 
 int main()
 {
@@ -62,8 +63,6 @@ int main()
                                VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT, VMA_MEMORY_USAGE_GPU_ONLY,
                                ving::RenderFrames::draw_image_format};
 
-    particles_buffer.set_memory(grid.particles().data(), grid.particles().size() * sizeof(glm::vec4));
-
     ving::ShaderResources resources{engine.core().device(), bindings, VK_SHADER_STAGE_COMPUTE_BIT};
 
     resources.write_image(0, 0, background, VK_IMAGE_LAYOUT_GENERAL);
@@ -80,63 +79,52 @@ int main()
 
     float cpu_update_time;
 
+    assert(particles_buffer.size() == sizeof(Particle) * particle_count);
+
     while (engine.running())
     {
-
         primitive_parameters.clear();
 
         for (auto &&p : grid.particles())
         {
-            primitive_parameters.push_back({{p.position.x * ving::Engine::initial_window_width,
-                                             p.position.y * ving::Engine::initial_window_height},
-                                            ParticleGrid::particle_scale * ving::Engine::initial_window_height,
-                                            particle_color});
+            primitive_parameters.push_back(
+                {{p.position.x * ving::Engine::initial_window_width,
+                  p.position.y * ving::Engine::initial_window_height},
+                 ParticleGrid::particle_scale * ving::Engine::initial_window_height,
+                 glm::mix(glm::vec3{0.1f, 0.1f, 0.8f}, glm::vec3{0.8f, 0.1f, 0.1f}, glm::length(p.velocity))});
         }
-
-#if 0
-        std::vector<std::span<Particle>> ps = grid.get_neighbour_particles(cell_coords);
-        std::vector<uint32_t> ind = grid.get_neighbour_particle_indices(cell_coords);
-        if (render_p)
-        {
-            uint32_t ctr = 0;
-            for (auto &&range : ps)
-            {
-                for (auto &&p : range)
-                {
-                    primitive_parameters.push_back({{p.position.x * ving::Engine::initial_window_width,
-                                                     p.position.y * ving::Engine::initial_window_height},
-                                                    ParticleGrid::particle_scale * ving::Engine::initial_window_height,
-                                                    particle_color});
-                    ctr++;
-                }
-            }
-
-            std::cout << "Actual: " << ctr << '\n';
-        }
-        else
-        {
-            for (auto &&i : ind)
-            {
-                const Particle &p = grid.particles()[i];
-                primitive_parameters.push_back({{p.position.x * ving::Engine::initial_window_width,
-                                                 p.position.y * ving::Engine::initial_window_height},
-                                                ParticleGrid::particle_scale * ving::Engine::initial_window_height,
-                                                particle_color});
-            }
-        }
-#endif
 
         ving::FrameInfo frame = engine.begin_frame();
 
         auto s = std::chrono::high_resolution_clock::now();
-        memcpy(gpu_particles_buffer, grid.particles().data(), grid.particles().size() * sizeof(glm::vec4));
+        memcpy(gpu_particles_buffer, grid.particles().data(), grid.particles().size() * sizeof(Particle));
         auto e = std::chrono::high_resolution_clock::now();
         std::chrono::duration<float> dur = e - s;
         float copying_buffer_time = dur.count();
 
         s = std::chrono::high_resolution_clock::now();
+        grid.generate_grid();
+
+        /*Particle part{*/
+        /*    {engine.cursor_pos().x / (float)ving::Engine::initial_window_width,*/
+        /*     engine.cursor_pos().y / (float)ving::Engine::initial_window_height},*/
+        /*    {},*/
+        /*    ParticleGrid::particle_scale * ving::Engine::initial_window_height,*/
+        /*};*/
+        /**/
+        /*std::vector<uint32_t> indices = grid.get_neighbour_particle_indices(part);*/
+        /*for (auto &&i : indices)*/
+        /*{*/
+        /*    primitive_parameters[i].color = {1.0f, 0.0f, 1.0f};*/
+        /*}*/
+
+        std::vector<TimeResult> results{};
         if (simulate)
-            grid.update(push.smoothing_radius, push.target_density, push.pressure_multiplier, engine.delta_time());
+        {
+            results = grid.update_particles(push.smoothing_radius, push.target_density, push.pressure_multiplier,
+                                            engine.delta_time());
+        }
+
         e = std::chrono::high_resolution_clock::now();
         dur = e - s;
         cpu_update_time = dur.count();
@@ -157,13 +145,21 @@ int main()
 
         engine.imgui_renderer().render(
             frame, {
-                       [&engine, &grid, cpu_update_time, &simulate, copying_buffer_time]() {
+                       [&engine, &grid, cpu_update_time, &simulate, copying_buffer_time, &results]() {
                            ImGui::Text("%f", engine.delta_time() * 1000.0f);
                            ImGui::Text("Cpu update: %f", cpu_update_time * 1000.0f);
                            ImGui::Text("Copying buffer: %f", copying_buffer_time * 1000.0f);
                            ImGui::ColorEdit3("Particle Color", glm::value_ptr(particle_color));
                            ImGui::DragFloat("Target Density", &push.target_density, 0.1f, 0.0f);
                            ImGui::DragFloat("Pressure multiplier", &push.pressure_multiplier, 0.01f, 0.0f);
+
+                           ImGui::Text("%f, %f", engine.cursor_pos().x, engine.cursor_pos().y);
+
+                           for (auto &&r : results)
+                           {
+                               std::string format = r.name + ": %f";
+                               ImGui::Text(format.c_str(), r.time);
+                           }
 
                            /*ImGui::Text("%f, %f", grid.particles()[0].position.x, grid.particles()[0].position.y);*/
                            /*ImGui::Text("%f, %f", grid.particles()[0].velocity.x, grid.particles()[0].velocity.y);*/

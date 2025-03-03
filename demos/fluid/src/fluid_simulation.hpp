@@ -9,7 +9,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include <random>
 #include <vector>
 
 static float smoothing_kernel_poly6(glm::vec2 position, float radius)
@@ -93,9 +92,11 @@ static float calculate_density(const std::vector<Particle> &particles, const std
 static float calculate_shared_pressure(float density_a, float density_b, float target_density,
                                        float pressure_multiplier)
 {
+    constexpr float damping = 0.9f;
+
     float pressure_a = convert_density_to_pressure(density_a, target_density, pressure_multiplier);
     float pressure_b = convert_density_to_pressure(density_b, target_density, pressure_multiplier);
-    return (pressure_a + pressure_b) / 2.0f;
+    return (damping * pressure_a + damping * pressure_b) / 2.0f;
 }
 static glm::vec2 calculate_pressure_force(const std::vector<Particle> &particles, const std::vector<uint32_t> &indices,
                                           int particle_index, float smoothing_radius, float target_density,
@@ -103,9 +104,7 @@ static glm::vec2 calculate_pressure_force(const std::vector<Particle> &particles
 {
     glm::vec2 pressure_force{0.0f};
 
-    const glm::vec2 &point = particles[particle_index].position;
-
-    std::random_device dev{};
+    glm::vec2 point = particles[particle_index].position;
 
     for (auto &&i : indices)
     {
