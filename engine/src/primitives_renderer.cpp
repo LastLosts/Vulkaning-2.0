@@ -35,11 +35,12 @@ PrimitivesRenderer::PrimitivesRenderer(const VulkanCore &core) : m_quad{generate
         }},
     };
     m_resources = ShaderResources{core.device(), bindings, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
-    m_circle_pipeline =
-        GraphicsPipline{core, m_resources, sizeof(PushConstants), primitive_vertex_shader, circle_shader};
+    m_circle_pipeline = GraphicsPipeline{
+        core, m_resources, primitive_vertex_shader, circle_shader, sizeof(PushConstants),
+    };
 
-    m_square_wire_pipeline = GraphicsPipline{
-        core, m_resources, sizeof(PushConstants), primitive_vertex_shader, square_shader, VK_POLYGON_MODE_LINE};
+    m_square_wire_pipeline = GraphicsPipeline{core,          m_resources,           primitive_vertex_shader,
+                                              square_shader, sizeof(PushConstants), VK_POLYGON_MODE_LINE};
 
     vkDestroyShaderModule(core.device(), circle_shader, nullptr);
     vkDestroyShaderModule(core.device(), square_shader, nullptr);
@@ -59,7 +60,7 @@ void PrimitivesRenderer::render(const FrameInfo &frame, PrimitiveType type, std:
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_img = frame.draw_img;
 
-    GraphicsPipline *chosen_pipeline;
+    GraphicsPipeline *chosen_pipeline;
 
     switch (type)
     {

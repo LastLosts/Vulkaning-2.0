@@ -3,25 +3,28 @@
 
 namespace ving
 {
-GraphicsPipline::GraphicsPipline() : m_device{nullptr}, m_pipeline{nullptr}, m_layout{nullptr}, m_push_constants_size{0}
+GraphicsPipeline::GraphicsPipeline()
+    : m_device{nullptr}, m_pipeline{nullptr}, m_layout{nullptr}, m_push_constants_size{0}
 {
 }
-GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &resources, uint32_t push_constant_size,
-                                 VkShaderModule vertex_shader, VkShaderModule fragment_shader,
-                                 VkPolygonMode polygon_mode)
+GraphicsPipeline::GraphicsPipeline(const VulkanCore &core, const ShaderResources &resources,
+                                   VkShaderModule vertex_shader, VkShaderModule fragment_shader,
+                                   uint32_t push_constant_size, VkPolygonMode polygon_mode)
     : m_device{core.device()}, m_push_constants_size{push_constant_size}
 {
     VkPipelineLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_info.setLayoutCount = resources.layouts_size();
     layout_info.pSetLayouts = resources.layouts();
+    layout_info.pushConstantRangeCount = 0;
+
+    VkPushConstantRange push_constant_range{};
+    push_constant_range.offset = 0;
+    push_constant_range.size = push_constant_size;
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
     if (push_constant_size != 0)
     {
-        VkPushConstantRange push_constant_range{};
-        push_constant_range.offset = 0;
-        push_constant_range.size = push_constant_size;
-        push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
         layout_info.pushConstantRangeCount = 1;
         layout_info.pPushConstantRanges = &push_constant_range;
@@ -135,7 +138,7 @@ GraphicsPipline::GraphicsPipline(const VulkanCore &core, const ShaderResources &
     if (vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_pipeline) != VK_SUCCESS)
         std::cout << "Failed to create graphics pipeline. Do proper error handling\n";
 }
-GraphicsPipline::~GraphicsPipline()
+GraphicsPipeline::~GraphicsPipeline()
 {
     if (m_device != VK_NULL_HANDLE)
     {

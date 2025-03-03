@@ -72,9 +72,9 @@ class PrimitivesRenderer
     Mesh m_quad;
 
     ShaderResources m_resources;
-    GraphicsPipline m_circle_pipeline;
-    GraphicsPipline m_square_wire_pipeline;
+    GraphicsPipeline m_circle_pipeline;
+    GraphicsPipeline m_square_wire_pipeline;
 
-    GraphicsPipline m_sphere_pipeline;
+    GraphicsPipeline m_sphere_pipeline;
 };
 } // namespace ving

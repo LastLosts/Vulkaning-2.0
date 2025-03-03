@@ -12,13 +12,15 @@ ComputePipeline::ComputePipeline(const VulkanCore &core, const ShaderResources &
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layout_info.pSetLayouts = shader_resources.layouts();
     layout_info.setLayoutCount = shader_resources.layouts_size();
+    layout_info.pushConstantRangeCount = 0;
+
+    VkPushConstantRange push_constant_range{};
+    push_constant_range.size = push_constants_size;
+    push_constant_range.offset = 0;
+    push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
     if (push_constants_size != 0)
     {
-        VkPushConstantRange push_constant_range{};
-        push_constant_range.size = push_constants_size;
-        push_constant_range.offset = 0;
-        push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         layout_info.pushConstantRangeCount = 1;
         layout_info.pPushConstantRanges = &push_constant_range;
     }
@@ -52,12 +54,14 @@ ComputePipeline::ComputePipeline(const VulkanCore &core, VkShaderModule compute_
     VkPipelineLayoutCreateInfo layout_info{};
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
+    VkPushConstantRange push_constant_range{};
+    push_constant_range.size = push_constants_size;
+    push_constant_range.offset = 0;
+    push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    layout_info.pushConstantRangeCount = 0;
+
     if (push_constants_size != 0)
     {
-        VkPushConstantRange push_constant_range{};
-        push_constant_range.size = push_constants_size;
-        push_constant_range.offset = 0;
-        push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         layout_info.pushConstantRangeCount = 1;
         layout_info.pPushConstantRanges = &push_constant_range;
     }

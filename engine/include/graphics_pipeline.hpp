@@ -6,19 +6,19 @@
 
 namespace ving
 {
-class GraphicsPipline
+class GraphicsPipeline
 {
   public:
-    GraphicsPipline();
-    GraphicsPipline(const VulkanCore &core, const ShaderResources &resources, uint32_t push_constant_size,
-                    VkShaderModule vertex_shader, VkShaderModule fragment_shader,
-                    VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL);
-    ~GraphicsPipline();
+    GraphicsPipeline();
+    GraphicsPipeline(const VulkanCore &core, const ShaderResources &resources, VkShaderModule vertex_shader,
+                     VkShaderModule fragment_shader, uint32_t push_constant_size = 0,
+                     VkPolygonMode polygon_mode = VK_POLYGON_MODE_FILL);
+    ~GraphicsPipeline();
 
-    GraphicsPipline(const GraphicsPipline &) = delete;
-    GraphicsPipline(GraphicsPipline &&) = delete;
-    GraphicsPipline &operator=(const GraphicsPipline &) = delete;
-    GraphicsPipline &operator=(GraphicsPipline &&other)
+    GraphicsPipeline(const GraphicsPipeline &) = delete;
+    GraphicsPipeline(GraphicsPipeline &&) = delete;
+    GraphicsPipeline &operator=(const GraphicsPipeline &) = delete;
+    GraphicsPipeline &operator=(GraphicsPipeline &&other)
     {
         m_device = other.m_device;
         std::swap(m_pipeline, other.m_pipeline);

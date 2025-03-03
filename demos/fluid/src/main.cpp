@@ -105,6 +105,7 @@ int main()
         s = std::chrono::high_resolution_clock::now();
         grid.generate_grid();
 
+        // Render particles close to mouse
         /*Particle part{*/
         /*    {engine.cursor_pos().x / (float)ving::Engine::initial_window_width,*/
         /*     engine.cursor_pos().y / (float)ving::Engine::initial_window_height},*/
@@ -179,8 +180,6 @@ int main()
         engine.end_frame(frame);
     }
 
-#ifndef NDEBUG
     vkDestroyShaderModule(engine.core().device(), fluid_density, nullptr);
     vkDeviceWaitIdle(engine.core().device());
-#endif
 }
