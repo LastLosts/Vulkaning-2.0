@@ -43,7 +43,7 @@ static float smoothing_kernel_spiky(glm::vec2 position, float radius)
     float dst_squared = position.x * position.x + position.y * position.y;
     float dst = sqrt(dst_squared);
 
-    if (radius * radius > dst_squared)
+    if (dst_squared < radius * radius)
     {
         float volume = (glm::pi<float>() * pow(radius, 4)) / 6.0f;
 
@@ -56,7 +56,7 @@ static float smoothing_kernel_spiky_derivative(glm::vec2 position, float radius)
     float dst_squared = position.x * position.x + position.y * position.y;
     float dst = sqrt(dst_squared);
 
-    if (radius * radius > dst_squared)
+    if (dst_squared < radius * radius)
     {
         float scale = 12.0f / (pow(radius, 4) * glm::pi<float>());
         return (dst - radius) * scale;
@@ -64,17 +64,15 @@ static float smoothing_kernel_spiky_derivative(glm::vec2 position, float radius)
     return 0;
 }
 
-static float convert_density_to_pressure(float density, float target_density, float pressure_multiplier)
+inline float convert_density_to_pressure(float density, float target_density, float pressure_multiplier)
 {
-    float density_delta = density - target_density;
-    float pressure = density_delta * pressure_multiplier;
-    return pressure;
+    return (density - target_density) * pressure_multiplier;
 }
 
 static float calculate_density(const std::vector<Particle> &particles, const std::vector<uint32_t> &indices,
                                uint32_t particle_index, float smoothing_radius)
 {
-    float density = 0.0;
+    float density = 0.0f;
 
     const glm::vec2 &point = particles[particle_index].position;
 
@@ -92,7 +90,7 @@ static float calculate_density(const std::vector<Particle> &particles, const std
 static float calculate_shared_pressure(float density_a, float density_b, float target_density,
                                        float pressure_multiplier)
 {
-    constexpr float damping = 0.9f;
+    constexpr float damping = 1.0f;
 
     float pressure_a = convert_density_to_pressure(density_a, target_density, pressure_multiplier);
     float pressure_b = convert_density_to_pressure(density_b, target_density, pressure_multiplier);
@@ -113,7 +111,7 @@ static glm::vec2 calculate_pressure_force(const std::vector<Particle> &particles
 
         glm::vec2 dir = glm::normalize(particles[i].position - point);
 
-        if (glm::distance(particles[i].position, point) == 0)
+        if (glm::distance(particles[i].position, point) == 0) [[unlikely]]
         {
             dir = glm::circularRand(1.0f);
         }
@@ -121,10 +119,11 @@ static glm::vec2 calculate_pressure_force(const std::vector<Particle> &particles
         float slope = smoothing_kernel_spiky_derivative(particles[i].position - point, smoothing_radius);
 
         float shared_pressure = calculate_shared_pressure(particles[i].density, particles[particle_index].density,
-
                                                           target_density, pressure_multiplier);
+        /*pressure_force +=*/
+        /*    shared_pressure * dir * slope / (particles[i].density + std::numeric_limits<float>::epsilon());*/
         pressure_force +=
-            shared_pressure * dir * slope / (particles[i].density + std::numeric_limits<float>::epsilon());
+            (particles[i].density == 0 ? glm::vec2{0.0f} : shared_pressure * dir * slope / particles[i].density);
     }
 
     assert(!std::isnan(pressure_force.x));

@@ -26,6 +26,7 @@ class Engine
 
     [[nodiscard]] const VulkanCore &core() const noexcept { return m_core; }
     [[nodiscard]] const ImGuiRenderer &imgui_renderer() const noexcept { return m_imgui_renderer; }
+    [[nodiscard]] Window &window() { return m_window; }
 
     FrameInfo begin_frame();
     void end_frame(FrameInfo frame);
