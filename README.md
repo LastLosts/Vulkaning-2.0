@@ -3,7 +3,7 @@ Vulkaning 2.0 is rewritten and upgraded version of [Vulkaning](https://github.co
 ### Changes from Vulkaning:
 1. Using vulkan.h instead of vulkan.hpp, because it was slowing compile times significantly.
 2. Using glfw instead of sdl, because of less code.
-3. Better structre (separated engine code with demos code).
+3. Better structure (separated engine code with demos code).
 4. No c++ exceptions.
 
 ## Building
