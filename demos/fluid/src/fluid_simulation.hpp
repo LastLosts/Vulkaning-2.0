@@ -38,18 +38,21 @@ static float smoothing_kernel_poly6_derivative(glm::vec2 position, float radius)
     return 0;
 }
 
-static float smoothing_kernel_spiky(glm::vec2 position, float radius)
+inline float smoothing_kernel_spiky(glm::vec2 position, float radius)
 {
-    float dst_squared = position.x * position.x + position.y * position.y;
-    float dst = sqrt(dst_squared);
+    float dst = glm::length(position);
+    /**/
+    /*if (dst_squared < radius * radius)*/
+    /*{*/
+    /*    float volume = (glm::pi<float>() * pow(radius, 4)) / 6.0f;*/
+    /**/
+    /*    return (radius - dst) * (radius - dst) / volume;*/
+    /*}*/
 
-    if (dst_squared < radius * radius)
-    {
-        float volume = (glm::pi<float>() * pow(radius, 4)) / 6.0f;
-
-        return (radius - dst) * (radius - dst) / volume;
-    }
-    return 0;
+    float radmindst = radius - dst;
+    return dst * dst < radius * radius
+               ? radmindst * radmindst / (glm::pi<float>() * radius * radius * radius * radius / 6.0f)
+               : 0;
 }
 static float smoothing_kernel_spiky_derivative(glm::vec2 position, float radius)
 {
@@ -110,11 +113,6 @@ static glm::vec2 calculate_pressure_force(const std::vector<Particle> &particles
             continue;
 
         glm::vec2 dir = glm::normalize(particles[i].position - point);
-
-        if (glm::distance(particles[i].position, point) == 0) [[unlikely]]
-        {
-            dir = glm::circularRand(1.0f);
-        }
 
         float slope = smoothing_kernel_spiky_derivative(particles[i].position - point, smoothing_radius);
 

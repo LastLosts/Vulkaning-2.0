@@ -2,9 +2,12 @@
 
 #include "particle.hpp"
 #include "timings.hpp"
+#include <atomic>
 #include <glm/ext/vector_uint2.hpp>
 #include <span>
 #include <vector>
+
+#include "thread_pool.hpp"
 
 struct CellsEntry
 {
@@ -13,7 +16,7 @@ struct CellsEntry
 };
 
 // TODO: Refactor this to 2 classes one for the grid, one for simulating particles
-class ParticleGrid
+class ParticleGrid final
 {
   public:
     ParticleGrid(float grid_size);
@@ -27,6 +30,7 @@ class ParticleGrid
     [[nodiscard]] std::span<Particle> particles() { return m_particles; }
     [[nodiscard]] uint32_t cells_size() { return m_cell_size; }
 
+    std::vector<uint32_t> get_cell_particle_indices(const Particle &particle);
     std::vector<uint32_t> get_neighbour_particle_indices(glm::vec2 particle_position);
     std::vector<uint32_t> get_neighbour_particle_indices(const Particle &particle);
 
@@ -36,10 +40,13 @@ class ParticleGrid
     bool gravity_on{false};
 
   private:
+    ThreadPool m_thread_pool;
+
     static constexpr float offset = 0.001f;
-    static constexpr float gravity = 0.9f;
-    static constexpr float collision_damping = 0.5f;
-    static constexpr uint32_t max_digits = 3;
+    static constexpr float gravity = 9.0f;
+    static constexpr float collision_damping = 0.3f;
+    uint32_t m_max_threads;
+    uint32_t m_max_digits = 3;
 
     std::vector<Particle> m_particles;
     std::vector<CellsEntry> m_cells_entries;
@@ -47,14 +54,18 @@ class ParticleGrid
     float m_cell_size;
     float m_grid_cell_size;
 
-    std::span<Particle> get_cell_particles(glm::uvec2 cell_coords);
+    std::vector<CellsEntry> get_neighbour_particle_entries(const Particle &particle);
     std::vector<std::span<Particle>> get_neighbour_particles(glm::uvec2 cell_coords);
+
+    float calculate_density(float smoothing_radius, uint32_t particle_index, std::span<CellsEntry> entries);
 
     glm::uvec2 particle_cell_coords(glm::vec2 particle_position);
     glm::uvec2 particle_cell_coords(const Particle &particle);
+    uint32_t get_particle_cell_id(const Particle &particle);
+    std::span<Particle> get_cell_particles(uint32_t cell_id);
+    std::span<Particle> get_cell_particles(glm::uvec2 cell_coords);
 
     uint32_t cell_id(glm::uvec2 cell_coords);
-    uint32_t get_particle_cell_id(const Particle &particle);
 
     void radix_sort_particles(std::vector<Particle> &arr);
 };

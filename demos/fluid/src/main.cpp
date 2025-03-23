@@ -1,200 +1,60 @@
-#include <iostream>
-
-#include "particle_grid.hpp"
-
-#include "compute_pipeline.hpp"
 #include "engine.hpp"
 #include "primitives_renderer.hpp"
+#include "spatial_particle_grid.hpp"
 
-#include <glm/gtc/random.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <tracy/Tracy.hpp>
 
-static glm::vec3 particle_color = {0.1f, 0.1f, 0.1f};
-
-// TODO: Fixed time step
-
-static float collision_damping = 0.9f;
-static float particle_spacing = 15.0f;
-static int particle_count = 500;
-
-static std::vector<ving::PrimitiveParameters> primitive_parameters{};
-
-struct PushConstants
-{
-    int particle_count;
-    float smoothing_radius;
-    float target_density;
-    float pressure_multiplier;
-};
-
-// Minimum smoothing radius is more then 0.1f because radix sort set up for only 2 digit numbers
-static PushConstants push{particle_count, 0.1f, 10.0f, 0.001f};
+static constexpr uint32_t particle_count = 700;
 
 int main()
 {
     ving::Engine engine{};
     ving::PrimitivesRenderer renderer{engine.core()};
 
-    float spacing = 0.005f;
+    SpatialParticleGrid grid{ving::Engine::initial_window_width, ving::Engine::initial_window_height, 100.0f};
+    grid.generate_particles_random(particle_count);
 
-    ParticleGrid grid{push.smoothing_radius};
-    /*grid.generate_particles_random(particle_count);*/
-    grid.generate_particles_cube(spacing, particle_count);
-    primitive_parameters.reserve(particle_count);
+    std::vector<ving::PrimitiveParameters> parameters{};
+    parameters.resize(particle_count);
 
-    bool simulate = false;
-
-    VkShaderModule fluid_density{};
-    if (!engine.load_shader("./demos/fluid/shaders/spirv/fluid_density.comp.spv", fluid_density))
+    for (auto &&p : grid.particles())
     {
-        std::cout << "Failed to load shader\n";
+        /*std::cout << p.position.x << ' ' << p.position.y << '\n';*/
     }
-
-    std::vector<ving::ShaderBindingSet> bindings{
-        ving::ShaderBindingSet{
-            {
-                {0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE},
-                {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER},
-            },
-        },
-    };
-
-    ving::GPUBuffer particles_buffer{engine.core(), grid.particles().size() * sizeof(Particle),
-                                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU};
-    ving::Texture2D background{engine.core(),
-                               VkExtent2D{ving::Engine::initial_window_width, ving::Engine::initial_window_height},
-                               VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT, VMA_MEMORY_USAGE_GPU_ONLY,
-                               ving::RenderFrames::draw_image_format};
-
-    ving::ShaderResources resources{engine.core().device(), bindings, VK_SHADER_STAGE_COMPUTE_BIT};
-
-    resources.write_image(0, 0, background, VK_IMAGE_LAYOUT_GENERAL);
-    resources.write_buffer(0, 1, particles_buffer);
-
-    ving::ComputePipeline density_background_render{engine.core(), resources, fluid_density, sizeof(PushConstants)};
-
-    void *gpu_particles_buffer = particles_buffer.map_and_get_memory();
-
-    std::vector<ving::PrimitiveParameters> primitive_parameters_2;
-
-    float smoothing_in_pixels_x = push.smoothing_radius * ving::Engine::initial_window_width;
-    float smoothing_in_pixels_y = push.smoothing_radius * ving::Engine::initial_window_height;
-
-    assert(particles_buffer.size() == sizeof(Particle) * particle_count);
 
     while (engine.running())
     {
-        primitive_parameters.clear();
-
-        for (auto &&p : grid.particles())
-        {
-            primitive_parameters.push_back(
-                {{p.position.x * ving::Engine::initial_window_width,
-                  p.position.y * ving::Engine::initial_window_height},
-                 ParticleGrid::particle_scale * ving::Engine::initial_window_height,
-                 glm::mix(glm::vec3{0.1f, 0.1f, 0.8f}, glm::vec3{0.8f, 0.1f, 0.1f}, glm::length(p.velocity))});
-        }
-
         ving::FrameInfo frame = engine.begin_frame();
+        grid.update();
 
-        auto s = std::chrono::high_resolution_clock::now();
-        memcpy(gpu_particles_buffer, grid.particles().data(), grid.particles().size() * sizeof(Particle));
-        auto e = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<float> dur = e - s;
-        float copying_buffer_time = dur.count();
-
-        std::vector<TimeResult> results{};
-
-        constexpr uint32_t iterations_per_frame = 5;
-        // Render particles close to mouse
-        for (uint32_t i = 0; i < iterations_per_frame; ++i)
+        for (uint32_t i = 0; i < particle_count; ++i)
         {
-            grid.generate_grid();
-            if (simulate)
+            parameters[i].position = grid.particles()[i].position;
+            parameters[i].color = glm::vec3{1.0f};
+            parameters[i].scale = 7.0f;
+        }
+        Particle particle{engine.cursor_pos(), {}, 0.0f, 0};
+        std::vector<CellsEntry> entries = grid.get_neighbour_particle_entries(particle);
+
+        for (auto &&e : entries)
+        {
+            for (uint32_t i = e.start; i < e.start + e.count; ++i)
             {
-                results = grid.update_particles(push.smoothing_radius, push.target_density, push.pressure_multiplier,
-                                                engine.delta_time() / iterations_per_frame);
+                parameters[i].color = glm::vec3{1.0f, 0.0f, 0.0f};
             }
         }
 
-        // External forces
-        /*if (glfwGetMouseButton(engine.window().window(), GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)*/
-        /*{*/
-        /*    Particle part{*/
-        /*        {engine.cursor_pos().x / (float)ving::Engine::initial_window_width,*/
-        /*         engine.cursor_pos().y / (float)ving::Engine::initial_window_height},*/
-        /*        {},*/
-        /*        ParticleGrid::particle_scale * ving::Engine::initial_window_height,*/
-        /*    };*/
-        /*    std::vector<uint32_t> indices = grid.get_neighbour_particle_indices(part);*/
-        /*    for (auto &&i : indices)*/
-        /*    {*/
-        /*        grid.particles()[i].velocity =*/
-        /*            grid.particles()[i].velocity +*/
-        /*            10.0f * glm::vec2{engine.cursor_pos().x / ving::Engine::initial_window_width,*/
-        /*                              engine.cursor_pos().y / ving::Engine::initial_window_height} -*/
-        /*            grid.particles()[i].position;*/
-        /*        primitive_parameters[i].color = {1.0f, 0.0f, 1.0f};*/
-        /*    }*/
-        /*}*/
+        engine.begin_rendering(frame, true);
 
-        // Background rendering
-        background.transition_layout(frame.cmd, VK_IMAGE_LAYOUT_GENERAL);
-        density_background_render.dispatch(frame.cmd, resources, &push, std::ceil(background.extent().width / 16.0f),
-                                           std::ceil(background.extent().height / 16.0f));
-
-        background.transition_layout(frame.cmd, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-        frame.draw_img->transition_layout(frame.cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        background.copy_to(frame.cmd, *frame.draw_img);
-
-        // TODO: Some way to tell the engine not to clear the image
-        engine.begin_rendering(frame, false);
-        renderer.render(frame, ving::PrimitiveType::Circle, primitive_parameters);
-        /*renderer.render(frame, ving::PrimitiveType::Square, primitive_parameters_2);*/
+        renderer.render(frame, ving::PrimitiveType::Circle, parameters);
 
         engine.imgui_renderer().render(
-            frame, {
-                       [&]() {
-                           ImGui::Text("%f", engine.delta_time() * 1000.0f);
-                           ImGui::Text("Copying buffer: %f", copying_buffer_time * 1000.0f);
-                           ImGui::ColorEdit3("Particle Color", glm::value_ptr(particle_color));
-                           ImGui::DragFloat("Target Density", &push.target_density, 0.1f, 0.0f);
-                           ImGui::InputFloat("Pressure multiplier", &push.pressure_multiplier, 0.0001f);
-                           ImGui::DragFloat("Spacing:", &spacing, 0.001f, 0.0f, 0.1f);
-                           ImGui::Text("Max vel: %f", grid.max_velocity);
+            frame, {[&engine]() { ImGui::Text("Engine delta time: %f", engine.delta_time() * 1000.0f); }});
 
-                           ImGui::Text("%f, %f", engine.cursor_pos().x, engine.cursor_pos().y);
-                           ImGui::Checkbox("Simulate:", &simulate);
-                           ImGui::Checkbox("Gravity", &grid.gravity_on);
-
-                           if (ImGui::Button("Generate"))
-                           {
-                               grid.generate_particles_cube(spacing, particle_count);
-                           }
-
-                           for (auto &&r : results)
-                           {
-                               std::string format = r.name + ": %f";
-                               ImGui::Text(format.c_str(), r.time);
-                           }
-
-                           /*ImGui::Text("%f, %f", grid.particles()[0].position.x, grid.particles()[0].position.y);*/
-                           /*ImGui::Text("%f, %f", grid.particles()[0].velocity.x, grid.particles()[0].velocity.y);*/
-                           /*ImGui::Text("%f", grid.particles()[0].density);*/
-
-                           /*ImGui::DragInt2("Coord: ", glm::value_ptr(cell_coords), 1, 0, grid.cells_size() - 1);*/
-
-                           /*ImGui::DragFloat("Particle Spacing", &particle_spacing, 1, 1, 10);*/
-                           /*ImGui::DragFloat("Particle Scale", &particle_scale);*/
-                           /*ImGui::DragInt("Particle Count", &particle_count, 1, 1, 1000);*/
-                           /*ImGui::DragFloat("Smoothing radius", &push.smoothing_radius, 0.001f,*/
-                           /*                 0.01f, 5.0f);*/
-                       },
-                   });
         engine.end_rendering(frame);
         engine.end_frame(frame);
+        FrameMark;
     }
-
-    vkDestroyShaderModule(engine.core().device(), fluid_density, nullptr);
-    vkDeviceWaitIdle(engine.core().device());
+    std::cout << "======== End of main so ignore if some Vulkan objects are destroyed before device done it's work. "
+                 "========\n";
 }

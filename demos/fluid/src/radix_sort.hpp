@@ -2,9 +2,6 @@
 #include <cstdint>
 #include <vector>
 
-constexpr uint32_t max_digits = 2;
-
-
 static uint32_t get_digit(uint32_t val, uint32_t dig)
 {
     uint32_t powten = glm::pow(10, dig);
@@ -14,6 +11,7 @@ static uint32_t get_digit(uint32_t val, uint32_t dig)
 // Used as refernece
 static void radix_sort(std::vector<uint32_t> &arr)
 {
+    constexpr uint32_t max_digits = 2;
     for (uint32_t j = 1; j <= max_digits; ++j)
     {
         uint32_t digits[10]{};
@@ -44,4 +42,3 @@ static void radix_sort(std::vector<uint32_t> &arr)
         arr = std::move(copy);
     }
 }
-

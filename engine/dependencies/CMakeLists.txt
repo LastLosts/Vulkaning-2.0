@@ -34,4 +34,8 @@ target_sources(
 
 target_link_libraries(imgui PUBLIC Vulkan::Vulkan glfw)
 
-target_link_libraries(engine-dependencies INTERFACE Vulkan::Vulkan GPUOpen::VulkanMemoryAllocator imgui glm::glm)
+option(TRACY_ENABLE "" ON)
+option(TRACY_ON_DEMAND "" ON)
+add_subdirectory("./tracy")
+
+target_link_libraries(engine-dependencies INTERFACE Vulkan::Vulkan GPUOpen::VulkanMemoryAllocator imgui glm::glm TracyClient)
