@@ -13,7 +13,7 @@ static uint32_t count_digits(uint32_t number)
     return int(log10(number) + 1);
 }
 
-ParticleGrid::ParticleGrid(float grid_size) : m_thread_pool{8}
+ParticleGrid::ParticleGrid(float grid_size) : m_thread_pool{8}, max_velocity{std::numeric_limits<float>::min()}
 {
     m_cell_size = ceil(1.0f / grid_size);
     m_max_digits = count_digits(m_cell_size * m_cell_size);
@@ -200,7 +200,7 @@ std::vector<TimeResult> ParticleGrid::update_particles(float smoothing_radius, f
 std::vector<uint32_t> ParticleGrid::get_cell_particle_indices(const Particle &particle)
 {
     std::vector<uint32_t> indices{};
-    const CellsEntry &entry = m_cells_entries[cell_id(particle_cell_coords(particle))];
+    const CellsEntry &entry = m_cells_entries[get_particle_cell_id(particle)];
     for (uint32_t i = entry.start; i < entry.start + entry.count; ++i)
     {
         indices.push_back(i);

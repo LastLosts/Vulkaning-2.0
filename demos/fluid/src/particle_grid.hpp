@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cells_entry.hpp"
 #include "particle.hpp"
 #include "timings.hpp"
 #include <atomic>
@@ -8,12 +9,6 @@
 #include <vector>
 
 #include "thread_pool.hpp"
-
-struct CellsEntry
-{
-    uint32_t start;
-    uint32_t count;
-};
 
 // TODO: Refactor this to 2 classes one for the grid, one for simulating particles
 class ParticleGrid final

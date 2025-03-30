@@ -1,15 +1,10 @@
 #pragma once
 
+#include "cells_entry.hpp"
 #include "glm/ext/vector_uint2.hpp"
 #include "particle.hpp"
 #include <span>
 #include <vector>
-
-struct CellsEntry final
-{
-    uint32_t start;
-    uint32_t count;
-};
 
 class SpatialParticleGrid final
 {
@@ -22,6 +17,7 @@ class SpatialParticleGrid final
     std::vector<CellsEntry> get_neighbour_particle_entries(const Particle &particle);
 
     [[nodiscard]] std::span<Particle> particles() { return m_particles; }
+    [[nodiscard]] float particle_radius() { return m_particle_radius; }
 
   private:
     std::vector<Particle> m_particles;
