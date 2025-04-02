@@ -81,26 +81,30 @@ void SpatialParticleGrid::generate_particles_random(size_t particle_count)
         m_particles[i].velocity = {};
     }
 }
-std::vector<CellsEntry> SpatialParticleGrid::get_neighbour_particle_entries(const Particle &particle)
+std::array<CellsEntry, 9> SpatialParticleGrid::get_neighbour_particle_entries(const Particle &particle)
 {
-    std::vector<CellsEntry> entries;
-    entries.reserve(9);
+    std::array<CellsEntry, 9> entries{};
 
     glm::uvec2 cell_coords = particle_cell_coords(particle);
 
+    uint32_t i = 0;
     for (int x = -1; x <= 1; ++x)
     {
         if ((int)cell_coords.x + x < 0 || (int)cell_coords.x + x >= m_cells_width)
+        {
             continue;
+        }
 
         for (int y = -1; y <= 1; ++y)
         {
             if ((int)cell_coords.y + y < 0 || (int)cell_coords.y + y >= m_cells_height)
+            {
                 continue;
+            }
 
             assert(cell_id({cell_coords.x + x, cell_coords.y + y}) < m_cells_width * m_cells_height);
 
-            entries.push_back(m_cells_entries[cell_id({cell_coords.x + x, cell_coords.y + y})]);
+            entries[i++] = m_cells_entries[cell_id({cell_coords.x + x, cell_coords.y + y})];
         }
     }
 

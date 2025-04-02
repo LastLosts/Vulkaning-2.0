@@ -3,11 +3,8 @@
 #include "cells_entry.hpp"
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/ext/vector_float2.hpp"
-#include "glm/ext/vector_float4.hpp"
 #include "glm/geometric.hpp"
-#include "glm/gtc/random.hpp"
 #include "particle.hpp"
-
 #include <cmath>
 #include <cstdint>
 #include <span>
@@ -169,6 +166,7 @@ static glm::vec2 calculate_pressure_force(std::span<Particle> particles, std::sp
 
     for (auto &&entry : entries)
     {
+
         for (uint32_t i = entry.start; i < entry.start + entry.count; ++i)
         {
             if (particle_index == i)

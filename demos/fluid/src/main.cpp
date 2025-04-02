@@ -3,12 +3,11 @@
 #include "primitives_renderer.hpp"
 #include "spatial_particle_grid.hpp"
 
-#include <tracy/Tracy.hpp>
-
 static constexpr uint32_t particle_count = 700;
-static float smoothing_radius = 50.0f;
-static float target_density = 0.1f;
-static float pressure_multiplier = 0.70f;
+static float smoothing_radius = 350.0f;
+static float target_density = 0.00045f;
+static float target_density_im = 4.5f;
+static float pressure_multiplier = 1200000.0f;
 // clang-format off
 #define ONE_TIME_LOG(x)                                                                                                \
     static bool a = true;                                                                                              \
@@ -18,12 +17,12 @@ static float pressure_multiplier = 0.70f;
     }
 // clang-format on
 
-static bool gravity_on = false;
+static bool gravity_on = true;
 
 static float max_density = std::numeric_limits<float>::min();
 static float max_velocity_length = std::numeric_limits<float>::min();
 
-static std::vector<CellsEntry> marked_particle_neighbours;
+static std::array<CellsEntry, 9> marked_particle_neighbours;
 static uint32_t marked_particle_index = 0;
 static bool debug_stop = false;
 
@@ -34,8 +33,8 @@ static void update_particles(SpatialParticleGrid &grid, float delta_time)
 
     bool update_cache = true;
 
-    std::vector<CellsEntry> cached_neighbours;
-    static const float gravity = 9.0f;
+    std::array<CellsEntry, 9> cached_neighbours{};
+    static const float gravity = 90.0f;
     glm::vec2 gravity_direction{0.0f, 1.0f};
     glm::vec2 gravity_force{gravity * delta_time * gravity_direction};
 
@@ -49,6 +48,7 @@ static void update_particles(SpatialParticleGrid &grid, float delta_time)
         }
 
         grid.particles()[i].density = calculate_density(grid.particles(), cached_neighbours, i, smoothing_radius);
+
         max_density = std::max(max_density, grid.particles()[i].density);
     }
     update_cache = true;
@@ -63,7 +63,7 @@ static void update_particles(SpatialParticleGrid &grid, float delta_time)
         }
 
         grid.particles()[i].position = grid.particles()[i].position + delta_time * grid.particles()[i].velocity;
-        grid.particles()[i].velocity = grid.particles()[i].velocity -
+        grid.particles()[i].velocity = grid.particles()[i].velocity +
                                        calculate_pressure_force(grid.particles(), cached_neighbours, i,
                                                                 smoothing_radius, target_density, pressure_multiplier);
 
@@ -89,36 +89,36 @@ static void update_particles(SpatialParticleGrid &grid, float delta_time)
         {
             constexpr float collision_damping = 0.7f;
 
-            glm::vec2 bound_max{ving::Engine::initial_window_width - grid.particle_radius(),
-                                ving::Engine::initial_window_height - grid.particle_radius()};
+            float bound_max_x = ving::Engine::initial_window_width - grid.particle_radius();
+            float bound_max_y = ving::Engine::initial_window_height - grid.particle_radius();
+            float bound_min_x = grid.particle_radius();
+            float bound_min_y = grid.particle_radius();
 
-            glm::vec2 bound_min{grid.particle_radius(), grid.particle_radius()};
-
-            if (grid.particles()[i].position.x > bound_max.x)
+            if (grid.particles()[i].position.x > bound_max_x)
             {
-                grid.particles()[i].position.x = bound_max.x;
+                grid.particles()[i].position.x = bound_max_x;
                 grid.particles()[i].velocity.x = -grid.particles()[i].velocity.x * collision_damping;
             }
-            if (grid.particles()[i].position.y > bound_max.y)
+            if (grid.particles()[i].position.y > bound_max_y)
             {
-                grid.particles()[i].position.y = bound_max.y;
+                grid.particles()[i].position.y = bound_max_y;
                 grid.particles()[i].velocity.y = -grid.particles()[i].velocity.y * collision_damping;
             }
-            if (grid.particles()[i].position.x < bound_min.x)
+            if (grid.particles()[i].position.x < bound_min_x)
             {
-                grid.particles()[i].position.x = bound_min.x;
+                grid.particles()[i].position.x = bound_min_x;
                 grid.particles()[i].velocity.x = -grid.particles()[i].velocity.x * collision_damping;
             }
-            if (grid.particles()[i].position.y < bound_min.y)
+            if (grid.particles()[i].position.y < bound_min_y)
             {
-                grid.particles()[i].position.y = bound_min.y;
+                grid.particles()[i].position.y = bound_min_y;
                 grid.particles()[i].velocity.y = -grid.particles()[i].velocity.y * collision_damping;
             }
         }
     }
 }
 
-constexpr uint32_t number_of_iterations = 5;
+constexpr uint32_t number_of_iterations = 4;
 static uint32_t highlighted_particle = 0;
 
 int main()
@@ -135,6 +135,7 @@ int main()
     while (engine.running())
     {
         ving::FrameInfo frame = engine.begin_frame();
+        target_density = target_density_im * 0.0001f;
 
         if (glfwGetKey(engine.window().window(), GLFW_KEY_P) == GLFW_PRESS)
         {
@@ -156,13 +157,10 @@ int main()
             debug_stop = true;
         }
 
-        if (!debug_stop)
+        grid.update();
+        for (uint32_t i = 0; i < number_of_iterations; ++i)
         {
-            grid.update();
-            for (uint32_t i = 0; i < number_of_iterations; ++i)
-            {
-                update_particles(grid, engine.delta_time() / (float)number_of_iterations);
-            }
+            update_particles(grid, engine.delta_time() / (float)number_of_iterations);
         }
 
         for (uint32_t i = 0; i < particle_count; ++i)
@@ -215,7 +213,7 @@ int main()
             frame, {[&engine, &grid]() {
                 ImGui::Text("Engine delta time: %f", engine.delta_time() * 1000.0f);
                 /*ImGui::InputFloat("Smoothing radius", &smoothing_radius);*/
-                ImGui::InputFloat("Target density", &target_density);
+                ImGui::DragFloat("Target density", &target_density_im, 0.001f, 0.0f, 100.0f);
                 ImGui::InputFloat("Pressure multiplier", &pressure_multiplier);
                 ImGui::Text("Marked particle particle: %d", marked_particle_index);
                 ImGui::Text("Max density: %f", max_density);
@@ -232,7 +230,6 @@ int main()
         engine.end_rendering(frame);
 
         engine.end_frame(frame);
-        FrameMark;
     }
     std::cout << "======== End of main so ignore if some Vulkan objects are destroyed before device done it's work. "
                  "========\n";

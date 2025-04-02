@@ -12,7 +12,7 @@ target_include_directories(engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(engine PUBLIC engine-dependencies)
 
 target_compile_features(engine PUBLIC cxx_std_20)
-target_compile_options(engine PUBLIC -fno-exceptions)
+# target_compile_options(engine PUBLIC -fno-exceptions)
 # target_compile_options(engine PRIVATE -Wall)
 
 target_include_directories(engine PRIVATE .)

@@ -14,7 +14,7 @@ class SpatialParticleGrid final
     void update();
 
     void generate_particles_random(size_t particle_count);
-    std::vector<CellsEntry> get_neighbour_particle_entries(const Particle &particle);
+    std::array<CellsEntry, 9> get_neighbour_particle_entries(const Particle &particle);
 
     [[nodiscard]] std::span<Particle> particles() { return m_particles; }
     [[nodiscard]] float particle_radius() { return m_particle_radius; }
