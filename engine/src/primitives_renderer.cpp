@@ -60,7 +60,7 @@ void PrimitivesRenderer::render(const FrameInfo &frame, PrimitiveType type, std:
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_img = frame.draw_img;
 
-    GraphicsPipeline *chosen_pipeline;
+    GraphicsPipeline *chosen_pipeline{};
 
     switch (type)
     {
@@ -92,8 +92,8 @@ void PrimitivesRenderer::render(const FrameInfo &frame, PrimitiveType type, std:
             m_push.color = color;
         }
 
-        vkCmdPushConstants(cmd, m_circle_pipeline.layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                           0, sizeof(PushConstants), &m_push);
+        vkCmdPushConstants(cmd, chosen_pipeline->layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                           sizeof(PushConstants), &m_push);
 
         vkCmdDrawIndexed(cmd, m_quad.index_count(), 1, 0, 0, 0);
         ++i;

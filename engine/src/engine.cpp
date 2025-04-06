@@ -7,7 +7,8 @@ namespace ving
 {
 Engine::Engine()
     : m_window{m_instance, 1280, 720}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window},
-      m_imgui_renderer{m_core, m_window, m_render_frames}, m_delta_time{0.016f}, m_time{0.0f}
+      m_imgui_renderer{m_core, m_window, m_render_frames}, m_delta_time{0.016f}, m_time{0.0f}, m_cursor_x{0.0f},
+      m_cursor_y{0.0f}
 {
     m_engine_creation_time = std::chrono::high_resolution_clock::now();
     m_running = true;

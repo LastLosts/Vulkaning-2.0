@@ -58,8 +58,6 @@ class Engine
 
     double m_cursor_x;
     double m_cursor_y;
-
-    float m_record_commands_time;
 };
 
 } // namespace ving
