@@ -1,4 +1,5 @@
 #include "vulkan_utils.hpp"
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <fstream>
@@ -71,6 +72,7 @@ VkInstance create_vulkan_instance(std::span<const char *> required_extensions, s
 
     return instance;
 }
+
 VkPhysicalDevice pick_vulkan_physical_device(std::span<VkPhysicalDevice> available_devices)
 {
     VkPhysicalDevice physical_device{};
@@ -212,7 +214,8 @@ VkFence create_vulkan_fence(VkDevice device, bool initial_state)
 
 // TODO: Most of the stuff is hardcoded
 VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevice device, VkSurfaceKHR surface,
-                                       VkExtent2D extent, uint32_t queue_family_count, uint32_t image_count)
+                                       VkExtent2D extent, uint32_t queue_family_count, uint32_t image_count,
+                                       VkPresentModeKHR prefered_present_mode)
 {
     VkSwapchainKHR swapchain{};
 
@@ -236,8 +239,18 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
         image_count = surface_capabilites.minImageCount;
     }
 
+    uint32_t modes_count = 0;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &modes_count, nullptr);
+    std::vector<VkPresentModeKHR> supported_present_modes;
+    supported_present_modes.resize(modes_count);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &modes_count, supported_present_modes.data());
+
+    VkPresentModeKHR present_mode = std::find(supported_present_modes.begin(), supported_present_modes.end(),
+                                              VK_PRESENT_MODE_IMMEDIATE_KHR) == supported_present_modes.end()
+                                        ? supported_present_modes[0]
+                                        : VK_PRESENT_MODE_IMMEDIATE_KHR;
+
     /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;*/
-    VkPresentModeKHR present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 
     VkSwapchainCreateInfoKHR info{};
     info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

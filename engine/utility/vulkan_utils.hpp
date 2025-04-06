@@ -19,7 +19,8 @@ VkSemaphore create_vulkan_semaphore(VkDevice device);
 VkFence create_vulkan_fence(VkDevice device, bool initial_state);
 
 VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevice device, VkSurfaceKHR surface,
-                                       VkExtent2D extent, uint32_t queue_family_count, uint32_t image_count);
+                                       VkExtent2D extent, uint32_t queue_family_count, uint32_t image_count,
+                                       VkPresentModeKHR prefered_present_mode = VK_PRESENT_MODE_FIFO_KHR);
 VkImage create_vulkan_image(VkDevice device, VkFormat format, VkExtent3D extent, VkImageUsageFlags usage,
                             VkImageType type = VK_IMAGE_TYPE_2D);
 VkImageView create_vulkan_image_view(VkDevice device, VkImage image, VkFormat format);

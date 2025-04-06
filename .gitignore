@@ -1,6 +1,6 @@
 build/
-build-vs/
-build-release/
+build_vs/
+build_release/
 .cache/
 build.bat
 build.sh
