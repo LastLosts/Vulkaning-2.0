@@ -7,3 +7,4 @@ build.sh
 build-release.sh
 generate.bat
 .vscode/
+compile_commands.json
