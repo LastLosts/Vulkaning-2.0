@@ -7,13 +7,31 @@ namespace ving
 class GPUBuffer
 {
   public:
+    GPUBuffer();
     GPUBuffer(const VulkanCore &core, size_t allocation_size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage);
     ~GPUBuffer();
 
     GPUBuffer(const GPUBuffer &) = delete;
-    GPUBuffer(GPUBuffer &&other) = delete;
+    GPUBuffer(GPUBuffer &&other)
+    {
+        m_allocator = other.m_allocator;
+        std::swap(m_buffer, other.m_buffer);
+        std::swap(m_allocation, other.m_allocation);
+        m_size = other.m_size;
+        std::swap(m_memory_mapped, other.m_memory_mapped);
+        std::swap(m_mapped_memory, other.m_mapped_memory);
+    }
     GPUBuffer &operator=(const GPUBuffer &) = delete;
-    GPUBuffer &operator=(GPUBuffer &&other) = delete;
+    GPUBuffer &operator=(GPUBuffer &&other)
+    {
+        m_allocator = other.m_allocator;
+        std::swap(m_buffer, other.m_buffer);
+        std::swap(m_allocation, other.m_allocation);
+        m_size = other.m_size;
+        std::swap(m_memory_mapped, other.m_memory_mapped);
+        std::swap(m_mapped_memory, other.m_mapped_memory);
+        return *this;
+    }
 
     void *map_and_get_memory();
     void set_memory(const void *data, uint32_t size);
@@ -26,7 +44,6 @@ class GPUBuffer
 
     VkBuffer m_buffer;
     VmaAllocation m_allocation;
-    /*VmaAllocationInfo m_allocation_info;*/
 
     VkDeviceSize m_size;
 

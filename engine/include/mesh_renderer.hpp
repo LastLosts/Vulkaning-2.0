@@ -1,7 +1,10 @@
 #pragma once
 
+#include <glm/mat4x4.hpp>
+
 #include "graphics_pipeline.hpp"
 #include "mesh.hpp"
+#include "perspective_camera.hpp"
 #include "render_frames.hpp"
 #include "shader_resources.hpp"
 #include <span>
@@ -19,7 +22,7 @@ class MeshRenderer
   public:
     MeshRenderer(const VulkanCore &core);
 
-    void render(const FrameInfo &frame, std::span<Mesh> meshes);
+    void render(const FrameInfo &frame, const PerspectiveCamera &camera, std::span<Mesh> meshes);
 
   private:
     ShaderResources m_resources;

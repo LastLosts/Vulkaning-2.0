@@ -29,7 +29,7 @@ MeshRenderer::MeshRenderer(const VulkanCore &core)
     vkDestroyShaderModule(core.device(), fragment, nullptr);
 }
 
-void MeshRenderer::render(const FrameInfo &frame, std::span<Mesh> meshes)
+void MeshRenderer::render(const FrameInfo &frame, const PerspectiveCamera &camera, std::span<Mesh> meshes)
 {
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_img = frame.draw_img;
@@ -39,8 +39,10 @@ void MeshRenderer::render(const FrameInfo &frame, std::span<Mesh> meshes)
                             m_resources.sets(), 0, nullptr);
 
     PushConstants push{};
+
     for (auto &&mesh : meshes)
     {
+        push.pvm_matrix = camera.view() * camera.projection();
         push.vertex_buffer_address = mesh.vertex_address();
         vkCmdBindIndexBuffer(cmd, mesh.index_buffer().buffer(), 0, VK_INDEX_TYPE_UINT32);
         vkCmdPushConstants(cmd, m_mesh_pipeline.layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,

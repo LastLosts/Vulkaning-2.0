@@ -6,6 +6,12 @@
 
 namespace ving
 {
+GPUBuffer::GPUBuffer()
+    : m_allocator{VK_NULL_HANDLE}, m_buffer{VK_NULL_HANDLE}, m_allocation{VK_NULL_HANDLE}, m_size{0},
+      m_memory_mapped{false}, m_mapped_memory{nullptr}
+{
+}
+
 GPUBuffer::GPUBuffer(const VulkanCore &core, size_t allocation_size, VkBufferUsageFlags usage,
                      VmaMemoryUsage memory_usage)
     : m_allocator{core.allocator()}, m_memory_mapped{false}, m_size{allocation_size}

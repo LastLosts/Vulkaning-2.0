@@ -15,12 +15,13 @@ class PerspectiveCamera
     float move_speed{1.0f};
     glm::vec3 position{};
 
+    void update();
+
     [[nodiscard]] glm::mat4 projection() const noexcept { return glm::perspective(m_fov, m_aspect, m_near, m_far); }
-    [[nodiscard]] glm::mat4 view() noexcept;
+    [[nodiscard]] glm::mat4 view() const noexcept { return m_view; }
 
     [[nodiscard]] glm::vec3 up() const noexcept { return m_up; }
     [[nodiscard]] glm::vec3 forward() const noexcept { return m_forward; }
-
     [[nodiscard]] float yaw() const noexcept { return m_yaw; }
 
     void set_yaw(float yaw) noexcept { m_yaw = yaw; }
@@ -33,6 +34,8 @@ class PerspectiveCamera
   private:
     glm::vec3 m_up{0.0f, 1.0f, 0.0f};
     glm::vec3 m_forward;
+
+    glm::mat4 m_view;
 
     float m_fov;
     float m_aspect;
