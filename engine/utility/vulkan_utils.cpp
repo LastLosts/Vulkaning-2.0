@@ -4,7 +4,6 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <vulkan/vk_enum_string_helper.h>
 
 namespace ving
 {
@@ -32,7 +31,7 @@ VkInstance create_vulkan_instance(std::span<const char *> required_extensions, s
 
     if (r != VK_SUCCESS)
     {
-        std::cout << "Failed to create vulkan instance :  " << string_VkResult(r) << '\n';
+        std::cout << "Failed to create vulkan instance :  VulkanError: " << r << '\n';
 
         if (r == VK_ERROR_LAYER_NOT_PRESENT)
         {
