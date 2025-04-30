@@ -24,7 +24,7 @@ MeshRenderer::MeshRenderer(const VulkanCore &core)
     m_resources = ShaderResources{core.device(), bindings, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
 
     m_mesh_pipeline =
-        GraphicsPipeline{core, m_resources, mesh_vertex_shader, fragment, sizeof(PushConstants), VK_POLYGON_MODE_LINE};
+        GraphicsPipeline{core, m_resources, mesh_vertex_shader, fragment, sizeof(PushConstants), VK_POLYGON_MODE_FILL};
     vkDestroyShaderModule(core.device(), mesh_vertex_shader, nullptr);
     vkDestroyShaderModule(core.device(), fragment, nullptr);
 }
@@ -42,8 +42,7 @@ void MeshRenderer::render(const FrameInfo &frame, const PerspectiveCamera &camer
 
     for (auto &&mesh : meshes)
     {
-        // push.pvm_matrix = camera.view() * camera.projection();
-        push.pvm_matrix = glm::mat4{1.0};
+        push.pvm_matrix = camera.projection() * camera.view();
         push.vertex_buffer_address = mesh.vertex_address();
         vkCmdBindIndexBuffer(cmd, mesh.index_buffer().buffer(), 0, VK_INDEX_TYPE_UINT32);
         vkCmdPushConstants(cmd, m_mesh_pipeline.layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,

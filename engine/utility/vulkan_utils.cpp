@@ -244,12 +244,18 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
     supported_present_modes.resize(modes_count);
     vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &modes_count, supported_present_modes.data());
 
-    VkPresentModeKHR present_mode = std::find(supported_present_modes.begin(), supported_present_modes.end(),
-                                              VK_PRESENT_MODE_IMMEDIATE_KHR) == supported_present_modes.end()
-                                        ? supported_present_modes[0]
-                                        : VK_PRESENT_MODE_IMMEDIATE_KHR;
-
-    /*VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;*/
+    VkPresentModeKHR present_mode{};
+    if (std::find(supported_present_modes.begin(), supported_present_modes.end(), prefered_present_mode) ==
+        supported_present_modes.end())
+    {
+        std::cout << "Warning: Prefered present mode, " << prefered_present_mode
+                  << " is not supported by surface, using default (VK_PRESENT_MODE_FIFO_KHR)\n";
+        present_mode = VK_PRESENT_MODE_FIFO_KHR;
+    }
+    else
+    {
+        present_mode = prefered_present_mode;
+    }
 
     VkSwapchainCreateInfoKHR info{};
     info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
