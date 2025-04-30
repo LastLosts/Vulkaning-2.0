@@ -35,3 +35,4 @@ target_sources(
 target_link_libraries(imgui PUBLIC Vulkan::Vulkan glfw)
 
 target_link_libraries(engine-dependencies INTERFACE Vulkan::Vulkan GPUOpen::VulkanMemoryAllocator imgui glm::glm)
+target_include_directories(engine-dependencies INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader")

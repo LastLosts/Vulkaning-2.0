@@ -1,0 +1,33 @@
+# MTL file - created by a modified js OBJExporter
+
+newmtl Cloth_Backdrop
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.4934999942779541
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Kd Cloth_Backdrop.png
+
+newmtl Dragon_with_Attenuation
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pds 1
+Pl 1
+Pccns 1-1
+Prfl 0.5
+Pior 1.5
+Pshc 0 0 0
+Pshr 1
+Psi 1
+Psc 1 1 1
+Pth 2.27
+Ptr 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+map_Pthm thicknessMap2.png

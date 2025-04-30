@@ -1,5 +1,6 @@
 #include "engine.hpp"
 #include "mesh_generator.hpp"
+#include "mesh_loader.hpp"
 #include "mesh_renderer.hpp"
 #include "perspective_camera.hpp"
 
@@ -12,7 +13,8 @@ int main()
 
     std::vector<ving::Mesh> meshes{};
     meshes.resize(1);
-    meshes[0] = generate_quad(engine.core());
+    // meshes[0] = generate_quad(engine.core());
+    meshes[0] = ving::load_mesh(engine.core(), "./demos/meshes/viking_room.obj");
 
     while (engine.running())
     {

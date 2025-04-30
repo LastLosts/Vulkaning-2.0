@@ -22,6 +22,6 @@ class Mesh
     GPUBuffer m_vertex_buffer;
     uint32_t m_index_count;
     GPUBuffer m_index_buffer;
-    VkDeviceAddress m_vertex_buffer_address;
+    VkDeviceAddress m_vertex_buffer_address{0};
 };
 } // namespace ving
