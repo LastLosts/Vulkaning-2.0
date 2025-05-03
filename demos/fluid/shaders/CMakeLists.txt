@@ -9,8 +9,8 @@ message(STATUS "BUILDING SHADERS for fluid")
 foreach(GLSL ${GLSL_SOURCE_FILES})
   get_filename_component(FILE_NAME ${GLSL} NAME)
   set(SPIRV "${CMAKE_CURRENT_SOURCE_DIR}/spirv/${FILE_NAME}.spv")
-  message(STATUS ${GLSL})
-  message(STATUS COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV})
+  # message(STATUS ${GLSL})
+  # message(STATUS COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV})
   add_custom_command(
     OUTPUT ${SPIRV}
     COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}

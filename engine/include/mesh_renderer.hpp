@@ -18,6 +18,10 @@ class MeshRenderer
         glm::mat4 pvm_matrix;
         VkDeviceAddress vertex_buffer_address;
     };
+    struct LightingSettings
+    {
+        glm::vec3 direction;
+    };
 
   public:
     MeshRenderer(const VulkanCore &core);
@@ -27,5 +31,8 @@ class MeshRenderer
   private:
     ShaderResources m_resources;
     GraphicsPipeline m_mesh_pipeline;
+
+    LightingSettings *m_lighting_settings;
+    GPUBuffer m_lighting_settings_buffer;
 };
 } // namespace ving

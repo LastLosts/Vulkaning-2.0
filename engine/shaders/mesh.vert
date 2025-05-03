@@ -2,6 +2,7 @@
 #extension GL_EXT_buffer_reference : require
 
 layout (location = 0) out vec2 out_uv;
+layout (location = 1) out vec3 out_normal;
 
 struct Vertex
 {
@@ -30,4 +31,5 @@ void main()
 
     out_uv.x = v.uv_x;
     out_uv.y = v.uv_y;
+    out_normal = v.normal;
 }

@@ -49,26 +49,33 @@ void Engine::begin_rendering(FrameInfo &frame, bool clear)
 {
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_img = frame.draw_img;
+    Texture2D *depth_img = frame.depth_img;
 
     draw_img->transition_layout(cmd, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    depth_img->transition_layout(cmd, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     VkClearValue clear_color{};
-    clear_color.color = VkClearColorValue{0.1f, 0.1f, 0.1f, 0.0f};
+    clear_color.color = VkClearColorValue{0.1f, 0.1f, 0.1f, 1.0f};
 
     VkRenderingAttachmentInfo color_attachment{};
     color_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
     color_attachment.imageView = draw_img->view();
     color_attachment.imageLayout = draw_img->layout();
-
     color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-
     if (clear)
     {
         color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         color_attachment.clearValue = clear_color;
     }
-
     color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+    VkRenderingAttachmentInfo depth_attachment{};
+    depth_attachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    depth_attachment.imageView = depth_img->view();
+    depth_attachment.imageLayout = depth_img->layout();
+    depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depth_attachment.clearValue.depthStencil.depth = 1.0f;
+    depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
     VkRenderingInfo render_info{};
     render_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
@@ -76,6 +83,7 @@ void Engine::begin_rendering(FrameInfo &frame, bool clear)
     render_info.layerCount = 1;
     render_info.colorAttachmentCount = 1;
     render_info.pColorAttachments = &color_attachment;
+    render_info.pDepthAttachment = &depth_attachment;
 
     vkCmdBeginRendering(cmd, &render_info);
 

@@ -50,6 +50,7 @@ ImGuiRenderer::ImGuiRenderer(const VulkanCore &core, const Window &window, const
     init_info.PipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
     init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &RenderFrames::draw_image_format;
+    init_info.PipelineRenderingCreateInfo.depthAttachmentFormat = RenderFrames::depth_image_format;
 
     ImGui_ImplVulkan_Init(&init_info);
     ImGui_ImplVulkan_CreateFontsTexture();

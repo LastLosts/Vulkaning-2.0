@@ -46,6 +46,7 @@ void *GPUBuffer::map_and_get_memory()
     return m_mapped_memory;
 }
 
+// TODO(artem): Stupid
 void GPUBuffer::set_memory(const void *data, uint32_t size)
 {
     assert(m_size >= size);

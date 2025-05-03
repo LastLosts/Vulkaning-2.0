@@ -98,12 +98,15 @@ GraphicsPipeline::GraphicsPipeline(const VulkanCore &core, const ShaderResources
 
     VkPipelineDepthStencilStateCreateInfo depth_test{};
     depth_test.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depth_test.depthTestEnable = VK_TRUE;
     depth_test.depthWriteEnable = VK_TRUE;
-    depth_test.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+    depth_test.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     depth_test.depthBoundsTestEnable = VK_FALSE;
+    depth_test.back.failOp = VK_STENCIL_OP_KEEP;
+    depth_test.back.passOp = VK_STENCIL_OP_KEEP;
+    depth_test.back.compareOp = VK_COMPARE_OP_ALWAYS;
+    depth_test.front = depth_test.back;
     depth_test.stencilTestEnable = VK_FALSE;
-    depth_test.minDepthBounds = 0.0f;
-    depth_test.maxDepthBounds = 1.0f;
 
     VkFormat color_attachment_format = RenderFrames::draw_image_format;
 
@@ -111,7 +114,7 @@ GraphicsPipeline::GraphicsPipeline(const VulkanCore &core, const ShaderResources
     render_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     render_info.colorAttachmentCount = 1;
     render_info.pColorAttachmentFormats = &color_attachment_format;
-    render_info.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
+    render_info.depthAttachmentFormat = RenderFrames::depth_image_format;
 
     VkDynamicState states[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 

@@ -20,7 +20,8 @@ class GraphicsPipeline
     GraphicsPipeline &operator=(const GraphicsPipeline &) = delete;
     GraphicsPipeline &operator=(GraphicsPipeline &&other)
     {
-        m_device = other.m_device;
+        // m_device = other.m_device;
+        std::swap(m_device, other.m_device);
         std::swap(m_pipeline, other.m_pipeline);
         std::swap(m_layout, other.m_layout);
         std::swap(m_push_constants_size, other.m_push_constants_size);
