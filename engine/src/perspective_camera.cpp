@@ -1,7 +1,5 @@
 #include "perspective_camera.hpp"
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
-#include "glm/gtc/matrix_transform.hpp"
+#include <algorithm>
 
 namespace ving
 {
@@ -12,21 +10,21 @@ PerspectiveCamera::PerspectiveCamera(float fov, float aspect, float near, float 
 }
 void PerspectiveCamera::update()
 {
-    pitch = glm::clamp(pitch, -89.0f, 89.0f);
-    glm::mat4 rot{1.0f};
+    pitch = std::min(std::max(pitch, -89.0f), 89.0f);
+    mat4 rot{1.0f};
 
-    rot = glm::rotate(rot, glm::radians(yaw), {0.0f, 1.0f, 0.0f});
-    rot = glm::rotate(rot, glm::radians(pitch), {1.0f, 0.0f, 0.0f});
+    rot = rotate(rot, glm::radians(yaw), {0.0f, 1.0f, 0.0f});
+    rot = rotate(rot, glm::radians(pitch), {1.0f, 0.0f, 0.0f});
 
     m_forward = rot[2];
     m_up = rot[1];
 
-    rot = glm::transpose(rot);
+    rot = transpose(rot);
 
-    glm::mat4 trans{1.0f};
-    trans = glm::translate(trans, -position);
+    mat4 trans{1.0f};
+    trans = translate(trans, -position);
 
     m_view = rot * trans;
-    m_projection = glm::perspective(m_fov, m_aspect, m_near, m_far);
+    m_projection = perspective(m_fov, m_aspect, m_near, m_far);
 }
 } // namespace ving

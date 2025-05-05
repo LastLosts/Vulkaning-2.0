@@ -1,5 +1,4 @@
 #pragma once
-#include "glm/ext/vector_float4.hpp"
 #include "mesh.hpp"
 
 #include <array>

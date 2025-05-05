@@ -2,7 +2,8 @@
 
 #include <chrono>
 
-#include "glm/ext/vector_float2.hpp"
+// #include "glm/ext/vector_float2.hpp"
+#include "math/vec2.hpp"
 #include "window.hpp"
 
 #include "gpu_buffer.hpp"
@@ -22,7 +23,10 @@ class Engine
     [[nodiscard]] float delta_time() const noexcept { return m_delta_time; }
     [[nodiscard]] float time() const noexcept { return m_time; }
 
-    [[nodiscard]] glm::vec2 cursor_pos() const { return {m_cursor_x, m_cursor_y}; }
+    [[nodiscard]] vec2 cursor_pos() const
+    {
+        return vec2{static_cast<float>(m_cursor_x), static_cast<float>(m_cursor_y)};
+    }
 
     [[nodiscard]] const VulkanCore &core() const noexcept { return m_core; }
     [[nodiscard]] const ImGuiRenderer &imgui_renderer() const noexcept { return m_imgui_renderer; }

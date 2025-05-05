@@ -1,18 +1,25 @@
 #include "engine.hpp"
-#include "glm/trigonometric.hpp"
 #include "imgui_utils.hpp"
 #include "mesh_loader.hpp"
 #include "mesh_renderer.hpp"
 #include "perspective_camera.hpp"
 
+#include "math/trigonometry.hpp"
+#include "math/vec3.hpp"
+#include "math/vec4.hpp"
+
 static constexpr float camera_rotate_speed = 40.0f;
 static constexpr float camera_move_speed = 1.0f;
+
+using ving::vec2;
+using ving::vec3;
+using ving::vec4;
 
 int main()
 {
     ving::Engine engine{};
     ving::PerspectiveCamera camera{
-        glm::radians(60.0f), (float)ving::Engine::initial_window_width / (float)ving::Engine::initial_window_height,
+        ving::radians(60.0f), (float)ving::Engine::initial_window_width / (float)ving::Engine::initial_window_height,
         0.01f, 10000.0f};
     ving::MeshRenderer render{engine.core()};
 
@@ -23,7 +30,7 @@ int main()
 
     while (engine.running())
     {
-        glm::vec3 camera_right = glm::cross(camera.up(), camera.forward());
+        vec3 camera_right = cross(camera.up(), camera.forward());
         if (glfwGetKey(engine.window().window(), GLFW_KEY_W))
             camera.position -= camera.forward() * camera_move_speed * engine.delta_time();
         if (glfwGetKey(engine.window().window(), GLFW_KEY_S))

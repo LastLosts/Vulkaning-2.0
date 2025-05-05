@@ -10,9 +10,6 @@ set(BUILD_SHARED_LIBS off)
 
 add_subdirectory(VulkanMemoryAllocator)
 
-set(GLM_BUILD_TESTS off)
-add_subdirectory(glm)
-
 set(GLFW_BUILD_DOCS off)
 add_subdirectory(glfw)
 
@@ -34,5 +31,5 @@ target_sources(
 
 target_link_libraries(imgui PUBLIC Vulkan::Vulkan glfw)
 
-target_link_libraries(engine-dependencies INTERFACE Vulkan::Vulkan GPUOpen::VulkanMemoryAllocator imgui glm::glm)
+target_link_libraries(engine-dependencies INTERFACE Vulkan::Vulkan GPUOpen::VulkanMemoryAllocator imgui)
 target_include_directories(engine-dependencies INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/tinyobjloader")
