@@ -2,8 +2,8 @@
 
 #define GLM_FORCE_RADIANS
 
-#include "glm/mat4x4.hpp"
-#include "glm/vec3.hpp"
+#include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/vector_float4.hpp"
 
 namespace ving
 {

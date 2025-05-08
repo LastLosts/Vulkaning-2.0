@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glm/mat4x4.hpp>
-
 #include "graphics_pipeline.hpp"
 #include "mesh.hpp"
 #include "perspective_camera.hpp"

@@ -4,3 +4,7 @@
 ### At last:
 1. Own vulkan allocator
 2. Own Gui (or try Nuklear)
+
+
+## Bugs
+- Camera pitch rotation bad

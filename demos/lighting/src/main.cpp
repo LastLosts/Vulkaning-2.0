@@ -1,7 +1,6 @@
 #include "engine.hpp"
 #include "glm/trigonometric.hpp"
 #include "imgui_utils.hpp"
-#include "mesh_generator.hpp"
 #include "mesh_loader.hpp"
 #include "mesh_renderer.hpp"
 #include "perspective_camera.hpp"
@@ -20,10 +19,7 @@ int main()
     std::vector<ving::Mesh> meshes{};
     meshes.resize(1);
 
-    meshes[0] = ving::load_mesh(engine.core(), "./demos/meshes/viking_room.obj");
-    // meshes[0] = generate_quad(engine.core());
-    // meshes[0] = ving::generate_cube(engine.core());
-    // meshes[0] = ving::load_mesh(engine.core(), "./demos/meshes/DragonAttenuation.obj");
+    meshes[0] = ving::load_mesh(engine.core(), "./demos/meshes/DragonAttenuation.obj");
     camera.position.z = 0.5f;
 
     while (engine.running())
@@ -60,6 +56,7 @@ int main()
         render.render(frame, camera, meshes);
         engine.imgui_renderer().render(frame, {[&camera, &engine]() {
                                            ImGui::Text("%f", engine.delta_time());
+                                           ImGui::Text("%f", engine.time());
                                            ImGui::Text("Forward %f %f %f", camera.forward().x, camera.forward().y,
                                                        camera.forward().z);
                                            ImGui::Text("Up %f %f %f", camera.up().x, camera.up().y, camera.up().z);
