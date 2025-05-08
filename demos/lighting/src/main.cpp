@@ -17,9 +17,8 @@ int main()
     ving::MeshRenderer render{engine.core()};
 
     std::vector<ving::Mesh> meshes{};
-    meshes.resize(1);
 
-    meshes[0] = ving::load_mesh(engine.core(), "./demos/meshes/DragonAttenuation.obj");
+    meshes.push_back(ving::load_mesh(engine.core(), "./demos/meshes/DragonAttenuation.obj"));
     camera.position.z = 0.5f;
 
     while (engine.running())

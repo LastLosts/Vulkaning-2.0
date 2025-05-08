@@ -15,21 +15,37 @@ class GPUBuffer
     GPUBuffer(GPUBuffer &&other)
     {
         m_allocator = other.m_allocator;
-        std::swap(m_buffer, other.m_buffer);
-        std::swap(m_allocation, other.m_allocation);
+
+        m_buffer = other.m_buffer;
+        other.m_buffer = VK_NULL_HANDLE;
+
+        m_allocation = other.m_allocation;
+        other.m_allocation = VK_NULL_HANDLE;
+
         m_size = other.m_size;
-        std::swap(m_memory_mapped, other.m_memory_mapped);
-        std::swap(m_mapped_memory, other.m_mapped_memory);
+
+        m_memory_mapped = other.m_memory_mapped;
+        other.m_memory_mapped = false;
+
+        m_mapped_memory = other.m_mapped_memory;
     }
     GPUBuffer &operator=(const GPUBuffer &) = delete;
     GPUBuffer &operator=(GPUBuffer &&other)
     {
         m_allocator = other.m_allocator;
-        std::swap(m_buffer, other.m_buffer);
-        std::swap(m_allocation, other.m_allocation);
+
+        m_buffer = other.m_buffer;
+        other.m_buffer = VK_NULL_HANDLE;
+
+        m_allocation = other.m_allocation;
+        other.m_allocation = VK_NULL_HANDLE;
+
         m_size = other.m_size;
-        std::swap(m_memory_mapped, other.m_memory_mapped);
-        std::swap(m_mapped_memory, other.m_mapped_memory);
+
+        m_memory_mapped = other.m_memory_mapped;
+        other.m_memory_mapped = false;
+
+        m_mapped_memory = other.m_mapped_memory;
         return *this;
     }
 
