@@ -1,8 +1,6 @@
 #include "primitives_renderer.hpp"
 
 #include "engine.hpp"
-#include "glm/ext/matrix_clip_space.hpp"
-#include "glm/ext/matrix_transform.hpp"
 #include "mesh_generator.hpp"
 #include "utility//vulkan_utils.hpp"
 
@@ -49,13 +47,13 @@ PrimitivesRenderer::PrimitivesRenderer(const VulkanCore &core) : m_quad{generate
     float half_height = (float)Engine::initial_window_height / 2.0f;
 
     /*m_push.ortho = glm::ortho(-half_width, half_width, -half_height, half_height);*/
-    m_push.ortho = glm::ortho(0.0f, (float)Engine::initial_window_width, 0.0f, (float)Engine::initial_window_height);
+    // m_push.ortho = ortho(0.0f, (float)Engine::initial_window_width, 0.0f, (float)Engine::initial_window_height);
 
     vkDestroyShaderModule(core.device(), primitive_vertex_shader, nullptr);
 }
 
 void PrimitivesRenderer::render(const FrameInfo &frame, PrimitiveType type, std::span<PrimitiveParameters> parameters,
-                                glm::vec3 color)
+                                vec3 color)
 {
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_img = frame.draw_img;
@@ -87,7 +85,7 @@ void PrimitivesRenderer::render(const FrameInfo &frame, PrimitiveType type, std:
         m_push.scale = param.scale;
         m_push.color = param.color;
 
-        if (color != glm::vec3{-1})
+        if (color != vec3{-1})
         {
             m_push.color = color;
         }

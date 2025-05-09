@@ -2,7 +2,6 @@
 
 #include <chrono>
 
-// #include "glm/ext/vector_float2.hpp"
 #include "math/vec2.hpp"
 #include "window.hpp"
 

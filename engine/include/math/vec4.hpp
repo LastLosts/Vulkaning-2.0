@@ -6,8 +6,17 @@ namespace ving
 {
 struct vec4
 {
+    vec4() : x{0.0f}, y{0.0f}, z{0.0f}, w{0.0f} {}
+    vec4(float _x, float _y, float _z, float _w) : x{_x}, y{_y}, z{_z}, w{_w} {}
+
+    [[nodiscard]] float &operator[](int i);
+    [[nodiscard]] const float &operator[](int i) const;
+
     union {
-        float x, y, z, w;
+        struct
+        {
+            float x, y, z, w;
+        };
         __m128 data;
     };
 };

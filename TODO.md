@@ -1,5 +1,5 @@
 ### First:
-1. Own math lib
+1. Own math lib (WIP)
 2. Own window
 ### At last:
 1. Own vulkan allocator

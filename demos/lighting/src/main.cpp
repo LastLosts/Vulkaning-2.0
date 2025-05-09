@@ -1,19 +1,17 @@
 #include "engine.hpp"
 #include "imgui_utils.hpp"
+#include "math/vec_functions.hpp"
 #include "mesh_loader.hpp"
 #include "mesh_renderer.hpp"
 #include "perspective_camera.hpp"
 
 #include "math/trigonometry.hpp"
 #include "math/vec3.hpp"
-#include "math/vec4.hpp"
 
 static constexpr float camera_rotate_speed = 40.0f;
 static constexpr float camera_move_speed = 1.0f;
 
-using ving::vec2;
 using ving::vec3;
-using ving::vec4;
 
 int main()
 {
@@ -30,7 +28,7 @@ int main()
 
     while (engine.running())
     {
-        vec3 camera_right = cross(camera.up(), camera.forward());
+        vec3 camera_right = ving::cross(camera.up(), camera.forward());
         if (glfwGetKey(engine.window().window(), GLFW_KEY_W))
             camera.position -= camera.forward() * camera_move_speed * engine.delta_time();
         if (glfwGetKey(engine.window().window(), GLFW_KEY_S))

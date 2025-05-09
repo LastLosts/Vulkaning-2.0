@@ -4,14 +4,19 @@ namespace ving
 {
 struct vec3
 {
+    vec3() : x{0.0f}, y{0.0f}, z{0.0f} {}
+    vec3(float _x) : x{_x}, y{_x}, z{_x} {}
+    vec3(float _x, float _y, float _z) : x{_x}, y{_y}, z{_z} {}
+
     union {
         struct
         {
             float x, y, z;
         };
-        float e[3];
+        float d[3];
     };
-    inline void operator+=(vec3 b);
+    void operator+=(vec3 b);
+    void operator-=(vec3 b);
 };
 
 inline vec3 operator*(float a, vec3 b)
@@ -65,6 +70,15 @@ inline vec3 operator-(vec3 v)
     result.z = -v.z;
 
     return result;
+}
+
+inline bool operator==(vec3 a, vec3 b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+inline bool operator!=(vec3 a, vec3 b)
+{
+    return !(a == b);
 }
 
 } // namespace ving

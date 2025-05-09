@@ -1,4 +1,5 @@
 #include "mesh.hpp"
+#include <cassert>
 #include <iostream>
 
 namespace ving

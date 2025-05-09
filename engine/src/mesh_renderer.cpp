@@ -2,6 +2,8 @@
 #include "output_operators.hpp"
 #include "utility/vulkan_utils.hpp"
 
+#include "math/vec_functions.hpp"
+
 namespace ving
 {
 MeshRenderer::MeshRenderer(const VulkanCore &core)
@@ -29,7 +31,7 @@ MeshRenderer::MeshRenderer(const VulkanCore &core)
         GPUBuffer{core, sizeof(LightingSettings), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU};
     m_lighting_settings = reinterpret_cast<LightingSettings *>(m_lighting_settings_buffer.map_and_get_memory());
     m_lighting_settings->direction = {0.4f, -1.0f, 0.0f};
-    m_lighting_settings->direction = glm::normalize(m_lighting_settings->direction);
+    m_lighting_settings->direction = normalize(m_lighting_settings->direction);
 
     m_resources = ShaderResources{core.device(), bindings, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT};
     m_resources.write_buffer(0, 0, m_lighting_settings_buffer);

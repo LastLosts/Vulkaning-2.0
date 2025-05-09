@@ -12,7 +12,7 @@ struct vec2
         {
             float x, y;
         };
-        float e[2];
+        float d[2];
     };
 };
 } // namespace ving

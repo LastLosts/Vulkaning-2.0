@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cells_entry.hpp"
-#include "glm/ext/vector_uint2.hpp"
 #include "particle.hpp"
 #include <span>
 #include <vector>

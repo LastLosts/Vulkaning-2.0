@@ -2,6 +2,7 @@
 
 #define GLM_FORCE_RADIANS
 
+#include "math/mat4.hpp"
 #include "math/vec3.hpp"
 
 namespace ving

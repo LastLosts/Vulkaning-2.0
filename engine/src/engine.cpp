@@ -1,7 +1,8 @@
 #include "engine.hpp"
 
-#include "glm/common.hpp"
 #include "utility/vulkan_utils.hpp"
+
+#include "math/common.h"
 
 namespace ving
 {
@@ -23,8 +24,8 @@ FrameInfo Engine::begin_frame()
     glfwPollEvents();
     glfwGetCursorPos(m_window.window(), &m_cursor_x, &m_cursor_y);
 
-    m_cursor_x = glm::clamp(m_cursor_x, 0.0, (double)initial_window_width);
-    m_cursor_y = glm::clamp(m_cursor_y, 0.0, (double)initial_window_height);
+    m_cursor_x = clamp(m_cursor_x, 0.0, (double)initial_window_width);
+    m_cursor_y = clamp(m_cursor_y, 0.0, (double)initial_window_height);
 
     FrameInfo frame = m_render_frames.begin_frame();
 

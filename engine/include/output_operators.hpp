@@ -1,9 +1,9 @@
 #pragma once
 
-#include "glm/ext/matrix_float4x4.hpp"
+#include "math/mat4.hpp"
 #include <ostream>
 
-inline std::ostream &operator<<(std::ostream &os, const glm::mat4 &m)
+inline std::ostream &operator<<(std::ostream &os, const ving::mat4 &m)
 {
     // clang-format off
     os << m[0][0] << ' ' << m[1][0] << ' ' << m[2][0] << ' ' << m[3][0] << '\n'

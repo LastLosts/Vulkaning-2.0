@@ -13,12 +13,12 @@ class MeshRenderer
 {
     struct PushConstants
     {
-        glm::mat4 pvm_matrix;
+        mat4 pvm_matrix;
         VkDeviceAddress vertex_buffer_address;
     };
     struct LightingSettings
     {
-        glm::vec3 direction;
+        vec3 direction;
     };
 
   public:
