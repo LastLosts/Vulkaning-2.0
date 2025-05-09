@@ -16,12 +16,8 @@ void PerspectiveCamera::update()
     pitch = std::min(std::max(pitch, -89.0f), 89.0f);
     mat4 rot{1.0f};
 
-    float theta1 = 0.0f; // roll
-    float theta2 = pitch;
-    float theta3 = yaw;
-
-    float c1 = 1.0f, c2 = cos(pitch), c3 = cos(yaw);
-    float s1 = 0.0f, s2 = sin(pitch), s3 = sin(yaw);
+    float c1 = 1.0f, c2 = cos(radians(pitch)), c3 = cos(radians(yaw));
+    float s1 = 0.0f, s2 = sin(radians(pitch)), s3 = sin(radians(yaw));
 
     // YXZ Rotation from wikipedia
     rot[0][0] = c3 * c1 - s3 * s2 * s1;
