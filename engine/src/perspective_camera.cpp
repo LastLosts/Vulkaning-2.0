@@ -1,4 +1,5 @@
 #include "perspective_camera.hpp"
+#include "math/matrix_transform.hpp"
 #include "math/trigonometry.hpp"
 #include <algorithm>
 
@@ -16,8 +17,10 @@ void PerspectiveCamera::update()
     pitch = std::min(std::max(pitch, -89.0f), 89.0f);
     mat4 rot{1.0f};
 
-    float c1 = 1.0f, c2 = cos(radians(pitch)), c3 = cos(radians(yaw));
-    float s1 = 0.0f, s2 = sin(radians(pitch)), s3 = sin(radians(yaw));
+    // float c1 = 1.0f, c2 = cos(radians(pitch)), c3 = cos(radians(yaw));
+    // float s1 = 0.0f, s2 = sin(radians(pitch)), s3 = sin(radians(yaw));
+    float c1 = cos(radians(yaw)), c2 = cos(radians(pitch)), c3 = 1.0f;
+    float s1 = sin(radians(yaw)), s2 = sin(radians(pitch)), s3 = 0.0f;
 
     // YXZ Rotation from wikipedia
     rot[0][0] = c3 * c1 - s3 * s2 * s1;
@@ -30,9 +33,6 @@ void PerspectiveCamera::update()
     rot[2][1] = s3 * s1 - c3 * s2 * c1;
     rot[2][2] = c2 * c1;
 
-    // rot = rotate(rot, radians(yaw), {0.0f, 1.0f, 0.0f});
-    // rot = rotate(rot, radians(pitch), {1.0f, 0.0f, 0.0f});
-
     m_forward = {rot[2].x, rot[2].y, rot[2].z};
     m_up = {rot[1].x, rot[1].y, rot[1].z};
 
@@ -40,14 +40,10 @@ void PerspectiveCamera::update()
 
     mat4 trans{1.0f};
 
-    // trans = translate(trans, -position);
-
-    trans[3].x = -position.x;
-    trans[3].y = -position.y;
-    trans[3].z = -position.z;
+    trans[3] = -position.x * trans[0] - position.y * trans[1] - position.z * trans[2] + trans[3];
 
     m_view = rot * trans;
 
-    // m_projection = perspective(m_fov, m_aspect, m_near, m_far);
+    m_projection = perspective(m_fov, m_aspect, m_near, m_far);
 }
 } // namespace ving

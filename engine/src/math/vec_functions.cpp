@@ -7,6 +7,10 @@
 
 namespace ving
 {
+float dot(vec4 a, vec4 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
 vec3 cross(vec3 x, vec3 y)
 {
     // Might be faster but i didn't bench it so i can't tell

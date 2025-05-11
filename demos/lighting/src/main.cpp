@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include "imgui_utils.hpp"
 #include "math/vec_functions.hpp"
+#include "mesh_generator.hpp"
 #include "mesh_loader.hpp"
 #include "mesh_renderer.hpp"
 #include "perspective_camera.hpp"
@@ -8,10 +9,13 @@
 #include "math/trigonometry.hpp"
 #include "math/vec3.hpp"
 
+#include "output_operators.hpp"
+
 static constexpr float camera_rotate_speed = 40.0f;
 static constexpr float camera_move_speed = 1.0f;
 
 using ving::vec3;
+using ving::vec4;
 
 int main()
 {
@@ -24,7 +28,8 @@ int main()
     std::vector<ving::Mesh> meshes{};
 
     meshes.push_back(ving::load_mesh(engine.core(), "./demos/meshes/DragonAttenuation.obj"));
-    camera.position.z = 0.5f;
+    // meshes.push_back(ving::generate_quad(engine.core()));
+    camera.position.z = -0.05f;
 
     while (engine.running())
     {
@@ -58,13 +63,13 @@ int main()
         engine.begin_rendering(frame, true);
 
         render.render(frame, camera, meshes);
-        engine.imgui_renderer().render(frame, {[&camera, &engine]() {
+        engine.imgui_renderer().render(frame, {[&]() {
                                            ImGui::Text("%f", engine.delta_time());
                                            ImGui::Text("%f", engine.time());
                                            ImGui::Text("Forward %f %f %f", camera.forward().x, camera.forward().y,
                                                        camera.forward().z);
                                            ImGui::Text("Up %f %f %f", camera.up().x, camera.up().y, camera.up().z);
-                                           ving::imgui_text_vec(camera.position);
+                                           ving::imgui_text_vec(camera.position, "Camera pos");
                                        }});
 
         engine.end_rendering(frame);
