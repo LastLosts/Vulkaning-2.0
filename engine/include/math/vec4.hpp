@@ -12,6 +12,9 @@ struct vec4
     [[nodiscard]] float &operator[](int i);
     [[nodiscard]] const float &operator[](int i) const;
 
+    void operator+=(vec4 b);
+    void operator-=(vec4 b);
+
     union {
         struct
         {

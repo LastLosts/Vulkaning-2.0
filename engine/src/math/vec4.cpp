@@ -4,6 +4,14 @@
 
 namespace ving
 {
+void vec4::operator+=(vec4 b)
+{
+    *this = *this + b;
+}
+void vec4::operator-=(vec4 b)
+{
+    *this = *this - b;
+}
 float &vec4::operator[](int i)
 {
     assert(i < 4 && i > -1);

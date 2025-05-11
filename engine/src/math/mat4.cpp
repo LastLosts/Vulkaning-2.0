@@ -38,24 +38,24 @@ mat4 operator*(const mat4 &m1, const mat4 &m2)
     vec4 srcB3 = m2[3];
 
     vec4 tmp0 = srcB0.x * srcA0;
-    tmp0 = tmp0 + srcB0.y * srcA1;
-    tmp0 = tmp0 + srcB0.z * srcA2;
-    tmp0 = tmp0 + srcB0.w * srcA3;
+    tmp0 += srcB0.y * srcA1;
+    tmp0 += srcB0.z * srcA2;
+    tmp0 += srcB0.w * srcA3;
 
     vec4 tmp1 = srcB1.x * srcA0;
-    tmp1 = tmp1 + srcB1.y * srcA1;
-    tmp1 = tmp1 + srcB1.z * srcA2;
-    tmp1 = tmp1 + srcB1.w * srcA3;
+    tmp1 += srcB1.y * srcA1;
+    tmp1 += srcB1.z * srcA2;
+    tmp1 += srcB1.w * srcA3;
 
     vec4 tmp2 = srcB2.x * srcA0;
-    tmp2 = tmp2 + srcB2.y * srcA1;
-    tmp2 = tmp2 + srcB2.z * srcA2;
-    tmp2 = tmp2 + srcB2.w * srcA3;
+    tmp2 += srcB2.y * srcA1;
+    tmp2 += srcB2.z * srcA2;
+    tmp2 += srcB2.w * srcA3;
 
     vec4 tmp3 = srcB3.x * srcA0;
-    tmp3 = tmp3 + srcB3.y * srcA1;
-    tmp3 = tmp3 + srcB3.z * srcA2;
-    tmp3 = tmp3 + srcB3.w * srcA3;
+    tmp3 += srcB3.y * srcA1;
+    tmp3 += srcB3.z * srcA2;
+    tmp3 += srcB3.w * srcA3;
 
     return mat4{tmp0, tmp1, tmp2, tmp3};
 }
