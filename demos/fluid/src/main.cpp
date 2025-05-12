@@ -157,10 +157,13 @@ int main()
             debug_stop = true;
         }
 
-        grid.update();
-        for (uint32_t i = 0; i < number_of_iterations; ++i)
+        if (!debug_stop)
         {
-            update_particles(grid, engine.delta_time() / (float)number_of_iterations);
+            grid.update();
+            for (uint32_t i = 0; i < number_of_iterations; ++i)
+            {
+                update_particles(grid, engine.delta_time() / (float)number_of_iterations);
+            }
         }
 
         for (uint32_t i = 0; i < particle_count; ++i)
@@ -170,11 +173,11 @@ int main()
             /*                               glm::length(grid.particles()[i].velocity) / max_velocity_length);*/
             // parameters[i].color = glm::mix(glm::vec3{0.0f, 0.0f, 1.0f}, glm::vec3{1.0f, 0.0f, 0.0f},
             //                                grid.particles()[i].density / max_density);
-            parameters[i].color = {1.0f, 1.0f, 1.0f};
+            parameters[i].color = {1.0f, 0.0f, 0.0f};
 
             if (debug_stop)
             {
-                parameters[i].color = {};
+                parameters[i].color = ving::vec3{0.0f};
             }
             parameters[i].scale = 7.0f;
         }

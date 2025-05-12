@@ -146,7 +146,7 @@ static ving::vec2 calculate_pressure_force(const std::vector<Particle> &particle
         /*pressure_force +=*/
         /*    shared_pressure * dir * slope / (particles[i].density + std::numeric_limits<float>::epsilon());*/
         pressure_force +=
-            (particles[i].density == 0 ? ving::vec2{0.0f} : shared_pressure * slope / particles[i].density * dir);
+            (particles[i].density == 0 ? ving::vec2{0.0f} : shared_pressure * dir * (slope / particles[i].density));
     }
 
     assert(!std::isnan(pressure_force.x));
@@ -180,7 +180,7 @@ static ving::vec2 calculate_pressure_force(std::span<Particle> particles, std::s
             /*pressure_force +=*/
             /*    shared_pressure * dir * slope / (particles[i].density + std::numeric_limits<float>::epsilon());*/
             pressure_force += (is_zero(particles[i].density) ? ving::vec2{0.0f}
-                                                             : shared_pressure * slope / particles[i].density * dir);
+                                                             : shared_pressure * dir * (slope / particles[i].density));
         }
     }
 

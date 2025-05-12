@@ -15,6 +15,15 @@ vec2 operator*(float s, vec2 v)
 
     return result;
 }
+vec2 operator*(vec2 v, float s)
+{
+    vec2 result;
+
+    result.x = s * v.x;
+    result.y = s * v.y;
+
+    return result;
+}
 
 vec2 operator+(vec2 a, vec2 b)
 {

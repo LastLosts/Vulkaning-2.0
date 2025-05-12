@@ -41,6 +41,17 @@ mat4 ortho(float left, float right, float bottom, float top, float near, float f
     result[3][2] = -near / (far - near);
     return result;
 }
+mat4 ortho(float left, float right, float bottom, float top)
+{
+    mat4 result{1.0f};
+    result[0][0] = 2.0f / (right - left);
+    result[1][1] = 2.0f / (top - bottom);
+    result[2][2] = 1.0f;
+    result[3][0] = -(right + left) / (right - left);
+    result[3][1] = -(top + bottom) / (top - bottom);
+
+    return result;
+}
 
 mat4 perspectiveA(float fovy, float aspect, float near, float far)
 {

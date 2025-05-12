@@ -5,7 +5,7 @@ namespace ving
 struct vec3
 {
     vec3() : x{0.0f}, y{0.0f}, z{0.0f} {}
-    vec3(float _x) : x{_x}, y{_x}, z{_x} {}
+    explicit vec3(float _s) : x{_s}, y{_s}, z{_s} {}
     vec3(float _x, float _y, float _z) : x{_x}, y{_y}, z{_z} {}
 
     union {

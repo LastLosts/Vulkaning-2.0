@@ -1,6 +1,7 @@
 #include "primitives_renderer.hpp"
 
 #include "engine.hpp"
+#include "math/matrix_transform.hpp"
 #include "mesh_generator.hpp"
 #include "utility//vulkan_utils.hpp"
 
@@ -46,8 +47,11 @@ PrimitivesRenderer::PrimitivesRenderer(const VulkanCore &core) : m_quad{generate
     float half_width = (float)Engine::initial_window_width / 2.0f;
     float half_height = (float)Engine::initial_window_height / 2.0f;
 
-    /*m_push.ortho = glm::ortho(-half_width, half_width, -half_height, half_height);*/
-    // m_push.ortho = ortho(0.0f, (float)Engine::initial_window_width, 0.0f, (float)Engine::initial_window_height);
+    // m_push.ortho = ortho(-half_width, half_width, -half_height, half_height, 0.01f, 100.0f);
+    // m_push.ortho = ortho(0.0f, (float)Engine::initial_window_width, 0.0f, Engine::initial_window_height, 0.01f,
+    // 100.0f);
+    m_push.ortho = ortho(0.0f, (float)Engine::initial_window_width, 0.0f, Engine::initial_window_height);
+    // m_push.ortho = mat4{1.0f};
 
     vkDestroyShaderModule(core.device(), primitive_vertex_shader, nullptr);
 }
