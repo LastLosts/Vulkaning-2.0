@@ -2,17 +2,21 @@
 
 namespace ving
 {
-inline vec2 operator*(float a, vec2 b)
+void vec2::operator+=(vec2 b)
+{
+    *this = *this + b;
+}
+vec2 operator*(float s, vec2 v)
 {
     vec2 result;
 
-    result.x = a * b.x;
-    result.y = a * b.y;
+    result.x = s * v.x;
+    result.y = s * v.y;
 
     return result;
 }
 
-inline vec2 operator+(vec2 a, vec2 b)
+vec2 operator+(vec2 a, vec2 b)
 {
     vec2 result;
 
@@ -21,7 +25,7 @@ inline vec2 operator+(vec2 a, vec2 b)
 
     return result;
 }
-inline vec2 operator-(vec2 a, vec2 b)
+vec2 operator-(vec2 a, vec2 b)
 {
     vec2 result;
 
@@ -30,7 +34,7 @@ inline vec2 operator-(vec2 a, vec2 b)
 
     return result;
 }
-inline vec2 operator-(vec2 v)
+vec2 operator-(vec2 v)
 {
     vec2 result;
 

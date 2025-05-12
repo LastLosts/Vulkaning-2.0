@@ -33,8 +33,9 @@ class SpatialParticleGrid final
     float m_particle_radius;
 
   private:
-    uint32_t cell_id(glm::uvec2 cell_coords);
-    glm::uvec2 particle_cell_coords(const Particle &particle);
+    uint32_t cell_id(uint32_t x, uint32_t y);
+    // TODO May use uvec2 again
+    std::pair<uint32_t, uint32_t> particle_cell_coords(const Particle &particle);
     uint32_t get_particle_cell_id(const Particle &particle);
 
     void radix_sort_particles();

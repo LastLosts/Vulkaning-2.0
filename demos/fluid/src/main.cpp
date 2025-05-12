@@ -35,8 +35,8 @@ static void update_particles(SpatialParticleGrid &grid, float delta_time)
 
     std::array<CellsEntry, 9> cached_neighbours{};
     static const float gravity = 90.0f;
-    glm::vec2 gravity_direction{0.0f, 1.0f};
-    glm::vec2 gravity_force{gravity * delta_time * gravity_direction};
+    ving::vec2 gravity_direction{0.0f, 1.0f};
+    ving::vec2 gravity_force{gravity * delta_time * gravity_direction};
 
     for (uint32_t i = 0; i < grid.particles().size(); ++i)
     {
@@ -67,7 +67,7 @@ static void update_particles(SpatialParticleGrid &grid, float delta_time)
                                        calculate_pressure_force(grid.particles(), cached_neighbours, i,
                                                                 smoothing_radius, target_density, pressure_multiplier);
 
-        float particle_velocity_length = glm::length(grid.particles()[i].velocity);
+        float particle_velocity_length = ving::length(grid.particles()[i].velocity);
         max_velocity_length = std::max(max_velocity_length, particle_velocity_length);
 
         if (gravity_on)
@@ -80,9 +80,9 @@ static void update_particles(SpatialParticleGrid &grid, float delta_time)
 
         if constexpr (!damping && collision)
         {
-            grid.particles()[i].position.x = glm::clamp(grid.particles()[i].position.x, grid.particle_radius(),
+            grid.particles()[i].position.x = std::clamp(grid.particles()[i].position.x, grid.particle_radius(),
                                                         ving::Engine::initial_window_width - grid.particle_radius());
-            grid.particles()[i].position.y = glm::clamp(grid.particles()[i].position.y, grid.particle_radius(),
+            grid.particles()[i].position.y = std::clamp(grid.particles()[i].position.y, grid.particle_radius(),
                                                         ving::Engine::initial_window_height - grid.particle_radius());
         }
         if constexpr (damping && collision)
@@ -143,7 +143,7 @@ int main()
 
             for (uint32_t i = 0; i < particle_count; ++i)
             {
-                float distance = glm::length(grid.particles()[i].position - engine.cursor_pos());
+                float distance = length(grid.particles()[i].position - engine.cursor_pos());
 
                 if (distance < min_distance)
                 {
@@ -168,8 +168,10 @@ int main()
             parameters[i].position = grid.particles()[i].position;
             /*parameters[i].color = glm::mix(glm::vec3{0.0f, 0.0f, 1.0f}, glm::vec3{1.0f, 0.0f, 0.0f},*/
             /*                               glm::length(grid.particles()[i].velocity) / max_velocity_length);*/
-            parameters[i].color = glm::mix(glm::vec3{0.0f, 0.0f, 1.0f}, glm::vec3{1.0f, 0.0f, 0.0f},
-                                           grid.particles()[i].density / max_density);
+            // parameters[i].color = glm::mix(glm::vec3{0.0f, 0.0f, 1.0f}, glm::vec3{1.0f, 0.0f, 0.0f},
+            //                                grid.particles()[i].density / max_density);
+            parameters[i].color = {1.0f, 1.0f, 1.0f};
+
             if (debug_stop)
             {
                 parameters[i].color = {};
@@ -183,10 +185,10 @@ int main()
             {
                 for (uint32_t i = entry.start; i < entry.start + entry.count; ++i)
                 {
-                    parameters[i].color = glm::vec3{1.0f, 0.0f, 0.0f};
+                    parameters[i].color = ving::vec3{1.0f, 0.0f, 0.0f};
                 }
             }
-            parameters[marked_particle_index].color = glm::vec3{0.0f, 1.0f, 0.0f};
+            parameters[marked_particle_index].color = ving::vec3{0.0f, 1.0f, 0.0f};
 
             // std::cout << "Density: " << grid.particles()[marked_particle_index].density << '\n';
             // std::cout << "Velocity: " << grid.particles()[marked_particle_index].velocity.x << ' '

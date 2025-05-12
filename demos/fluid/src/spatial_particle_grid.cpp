@@ -1,5 +1,5 @@
 #include "spatial_particle_grid.hpp"
-#include "glm/common.hpp"
+#include <cassert>
 #include <cmath>
 #include <random>
 
@@ -9,7 +9,7 @@ static uint32_t count_digits(uint32_t number)
 }
 static uint32_t get_digit(uint32_t value, uint32_t digit_place)
 {
-    uint32_t powten = std::pow(10, digit_place);
+    uint32_t powten = pow(10, digit_place);
     return (value % powten) / (powten / 10);
 }
 
@@ -85,42 +85,45 @@ std::array<CellsEntry, 9> SpatialParticleGrid::get_neighbour_particle_entries(co
 {
     std::array<CellsEntry, 9> entries{};
 
-    glm::uvec2 cell_coords = particle_cell_coords(particle);
+    std::pair<uint32_t, uint32_t> cell_coords = particle_cell_coords(particle);
+    uint32_t cell_x = cell_coords.first;
+    uint32_t cell_y = cell_coords.second;
 
     uint32_t i = 0;
     for (int x = -1; x <= 1; ++x)
     {
-        if ((int)cell_coords.x + x < 0 || (int)cell_coords.x + x >= m_cells_width)
+        if ((int)cell_x + x < 0 || (int)cell_x + x >= m_cells_width)
         {
             continue;
         }
 
         for (int y = -1; y <= 1; ++y)
         {
-            if ((int)cell_coords.y + y < 0 || (int)cell_coords.y + y >= m_cells_height)
+            if ((int)cell_y + y < 0 || (int)cell_y + y >= m_cells_height)
             {
                 continue;
             }
 
-            assert(cell_id({cell_coords.x + x, cell_coords.y + y}) < m_cells_width * m_cells_height);
+            assert(cell_id(cell_x + x, cell_y + y) < m_cells_width * m_cells_height);
 
-            entries[i++] = m_cells_entries[cell_id({cell_coords.x + x, cell_coords.y + y})];
+            entries[i++] = m_cells_entries[cell_id(cell_x + x, cell_y + y)];
         }
     }
 
     return entries;
 }
-uint32_t SpatialParticleGrid::cell_id(glm::uvec2 cell_coords)
+uint32_t SpatialParticleGrid::cell_id(uint32_t x, uint32_t y)
 {
-    return cell_coords.y * m_cells_width + cell_coords.x;
+    return y * m_cells_width + x;
 }
-glm::uvec2 SpatialParticleGrid::particle_cell_coords(const Particle &particle)
+std::pair<uint32_t, uint32_t> SpatialParticleGrid::particle_cell_coords(const Particle &particle)
 {
     return {trunc(particle.position.x / m_cell_size_pixels), trunc(particle.position.y / m_cell_size_pixels)};
 }
 uint32_t SpatialParticleGrid::get_particle_cell_id(const Particle &particle)
 {
-    return cell_id(particle_cell_coords(particle));
+    auto coords = particle_cell_coords(particle);
+    return cell_id(coords.first, coords.second);
 }
 
 static bool is_sorted(const std::vector<Particle> &particles)

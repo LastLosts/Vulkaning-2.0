@@ -14,6 +14,7 @@ float dot(vec4 a, vec4 b)
 vec3 cross(vec3 x, vec3 y)
 {
     // Might be faster but i didn't bench it so i can't tell
+    // also it doesn't produce right results
 #ifdef SIMD_CROSS
     float aa[4]{x.x, x.y, x.z, x.z};
     float bb[4]{y.x, y.y, y.z, y.z};
@@ -42,11 +43,20 @@ vec3 cross(vec3 x, vec3 y)
     return result;
 #endif
 }
+vec2 normalize(vec2 v)
+{
+    float len = length(v);
+    return vec2{};
+}
 vec3 normalize(vec3 v)
 {
     float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 
     return vec3{v.x / len, v.y / len, v.z / len};
+}
+float length(vec2 v)
+{
+    return sqrt(v.x * v.x + v.y * v.y);
 }
 
 } // namespace ving
