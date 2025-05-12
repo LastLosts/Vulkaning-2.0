@@ -13,7 +13,6 @@ struct vec3
         {
             float x, y, z;
         };
-        float d[3];
     };
     void operator+=(vec3 b);
     void operator-=(vec3 b);

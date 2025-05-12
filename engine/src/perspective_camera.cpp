@@ -36,11 +36,12 @@ void PerspectiveCamera::update()
     m_forward = {rot[2].x, rot[2].y, rot[2].z};
     m_up = {rot[1].x, rot[1].y, rot[1].z};
 
-    // rot = transpose(rot);
+    rot = transpose(rot);
 
     mat4 trans{1.0f};
 
-    trans[3] = -position.x * trans[0] - position.y * trans[1] - position.z * trans[2] + trans[3];
+    // trans[3] = (-position.x * trans[0]) + (-position.y * trans[1]) + (-position.z * trans[2]) + trans[3];
+    trans[3] = vec4{-position.x, -position.y, -position.z, 1.0f};
 
     m_view = rot * trans;
 
