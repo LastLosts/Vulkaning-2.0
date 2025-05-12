@@ -7,4 +7,4 @@
 
 
 ## Bugs
-- Camera pitch rotation bad
+- None for now

@@ -32,16 +32,16 @@ void PerspectiveCamera::update()
     rot[2][0] = c3 * s1 + s3 * s2 * c1;
     rot[2][1] = s3 * s1 - c3 * s2 * c1;
     rot[2][2] = c2 * c1;
+    // rot = transpose(rot);
 
-    m_forward = {rot[2].x, rot[2].y, rot[2].z};
+    // This rotation matrix from wiki produces righthanded coordinate system so we flip x for forward
+    m_forward = vec3{-rot[2].x, rot[2].y, rot[2].z};
     m_up = {rot[1].x, rot[1].y, rot[1].z};
-
-    rot = transpose(rot);
 
     mat4 trans{1.0f};
 
-    // trans[3] = (-position.x * trans[0]) + (-position.y * trans[1]) + (-position.z * trans[2]) + trans[3];
-    trans[3] = vec4{-position.x, -position.y, -position.z, 1.0f};
+    trans[3] = (-position.x * trans[0]) + (-position.y * trans[1]) + (-position.z * trans[2]) + trans[3];
+    // trans[3] = vec4{-position.x, -position.y, -position.z, 1.0f};
 
     m_view = rot * trans;
 

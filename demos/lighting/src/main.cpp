@@ -28,6 +28,7 @@ int main()
     std::vector<ving::Mesh> meshes{};
 
     meshes.push_back(ving::load_mesh(engine.core(), "./demos/meshes/DragonAttenuation.obj"));
+
     // meshes.push_back(ving::generate_quad(engine.core()));
     camera.position.z = -0.05f;
 
@@ -35,9 +36,9 @@ int main()
     {
         vec3 camera_right = ving::cross(camera.up(), camera.forward());
         if (glfwGetKey(engine.window().window(), GLFW_KEY_W))
-            camera.position -= camera.forward() * camera_move_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_S))
             camera.position += camera.forward() * camera_move_speed * engine.delta_time();
+        if (glfwGetKey(engine.window().window(), GLFW_KEY_S))
+            camera.position -= camera.forward() * camera_move_speed * engine.delta_time();
         if (glfwGetKey(engine.window().window(), GLFW_KEY_A))
             camera.position -= camera_right * camera_move_speed * engine.delta_time();
         if (glfwGetKey(engine.window().window(), GLFW_KEY_D))
@@ -69,6 +70,7 @@ int main()
                                            ImGui::Text("Forward %f %f %f", camera.forward().x, camera.forward().y,
                                                        camera.forward().z);
                                            ImGui::Text("Up %f %f %f", camera.up().x, camera.up().y, camera.up().z);
+                                           ving::imgui_text_vec(camera_right, "Right");
                                            ving::imgui_text_vec(camera.position, "Camera pos");
                                        }});
 
