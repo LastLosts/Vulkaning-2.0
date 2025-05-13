@@ -6,13 +6,14 @@
 
 namespace ving
 {
-Swapchain::Swapchain(const VulkanCore &core, const Window &window) : m_device{core.device()}
+Swapchain::Swapchain(const VulkanCore &core, const Window &window, uint32_t preferred_image_count)
+    : m_device{core.device()}
 {
     vkGetDeviceQueue(m_device, core.present_queue_family(), 0, &m_present_queue);
     m_image_extent = VkExtent2D{window.width(), window.height()};
     m_swapchain = create_vulkan_swapchain(
         core.physical_device(), core.device(), window.vulkan_surface(), m_image_extent,
-        (core.present_queue_family() == core.graphics_queue_family()) ? 1 : 2, RenderFrames::frames_in_flight);
+        (core.present_queue_family() == core.graphics_queue_family()) ? 1 : 2, preferred_image_count);
 
     uint32_t count;
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, nullptr);

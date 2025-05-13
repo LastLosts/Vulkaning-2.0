@@ -9,13 +9,15 @@ namespace ving
 class Swapchain
 {
   public:
-    Swapchain(const VulkanCore &core, const Window &window);
+    Swapchain(const VulkanCore &core, const Window &window, uint32_t preferred_image_count = 2);
     ~Swapchain();
 
     Swapchain(const Swapchain &) = delete;
     Swapchain &operator=(const Swapchain &) = delete;
     Swapchain(Swapchain &&) = delete;
     Swapchain &operator=(Swapchain &&) = delete;
+
+    [[nodiscard]] uint32_t image_count() const { return m_images.size(); }
 
     uint32_t acquire_image(VkSemaphore image_acquire_semaphore);
     void copy_image_to_swapchain(VkCommandBuffer cmd, VkImage source, VkExtent2D extent,

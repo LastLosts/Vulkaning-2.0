@@ -213,7 +213,7 @@ VkFence create_vulkan_fence(VkDevice device, bool initial_state)
 
 // TODO: Most of the stuff is hardcoded
 VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevice device, VkSurfaceKHR surface,
-                                       VkExtent2D extent, uint32_t queue_family_count, uint32_t image_count,
+                                       VkExtent2D extent, uint32_t queue_family_count, uint32_t preferred_image_count,
                                        VkPresentModeKHR prefered_present_mode)
 {
     VkSwapchainKHR swapchain{};
@@ -228,14 +228,14 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
     VkSurfaceCapabilitiesKHR surface_capabilites{};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &surface_capabilites);
 
-    assert(!(surface_capabilites.maxImageCount != 0 && image_count < surface_capabilites.maxImageCount));
+    assert(!(surface_capabilites.maxImageCount != 0 && preferred_image_count < surface_capabilites.maxImageCount));
 
-    if (image_count < surface_capabilites.minImageCount)
+    if (preferred_image_count < surface_capabilites.minImageCount)
     {
-        std::cout << "Warning: prefered image count of " << image_count
+        std::cout << "Warning: prefered image count of " << preferred_image_count
                   << " is less then vulkan surface capabilities min image count " << surface_capabilites.minImageCount
                   << ", changing image count to surface capabilites min image count" << std::endl;
-        image_count = surface_capabilites.minImageCount;
+        preferred_image_count = surface_capabilites.minImageCount;
     }
 
     uint32_t modes_count = 0;
@@ -260,7 +260,7 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
     VkSwapchainCreateInfoKHR info{};
     info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     info.surface = surface;
-    info.minImageCount = image_count;
+    info.minImageCount = preferred_image_count;
     info.imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
     info.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     info.imageExtent = extent;

@@ -17,6 +17,9 @@ RenderFrames::RenderFrames(const VulkanCore &core, const Window &window)
 {
     vkGetDeviceQueue(m_device, core.graphics_queue_family(), 0, &m_graphics_queue);
 
+    m_frames_in_flight = m_swapchain.image_count();
+    m_frames.resize(m_frames_in_flight);
+
     for (auto &&frame : m_frames)
     {
         frame.command_pool = create_vulkan_command_pool(core.device(), core.graphics_queue_family(),
@@ -50,7 +53,7 @@ RenderFrames::~RenderFrames()
 }
 FrameInfo RenderFrames::begin_frame()
 {
-    FrameResources &current_frame = m_frames[m_frame_number % frames_in_flight];
+    FrameResources &current_frame = m_frames[m_frame_number % m_frames_in_flight];
     VkCommandBuffer cmd = current_frame.commands;
 
     vkWaitForFences(m_device, 1, &current_frame.render_fence, VK_TRUE, 1000000000);
@@ -70,7 +73,7 @@ FrameInfo RenderFrames::begin_frame()
 }
 void RenderFrames::end_frame()
 {
-    FrameResources &current_frame = m_frames[m_frame_number % frames_in_flight];
+    FrameResources &current_frame = m_frames[m_frame_number % m_frames_in_flight];
     VkCommandBuffer cmd = current_frame.commands;
 
     m_swapchain.copy_image_to_swapchain(cmd, m_draw_image.image(), m_draw_image.extent(), m_acquired_image_index);
