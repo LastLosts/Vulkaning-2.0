@@ -87,7 +87,7 @@ int main()
                               {2560, 1440},
                               VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                               VMA_MEMORY_USAGE_GPU_ONLY,
-                              VK_FORMAT_R32G32B32A32_SFLOAT};
+                              VK_FORMAT_R16G16B16A16_SFLOAT};
 
     staging_buffer.set_memory(agents.data(), sizeof(Agent) * agents.size());
     engine.copy_buffer_to_buffer_immediate(staging_buffer, agents_buffer);
@@ -129,7 +129,7 @@ int main()
 
     PushConstants push_constants{};
 
-    while (glfwWindowShouldClose(window.window()))
+    while (!glfwWindowShouldClose(window.window()))
     {
         auto start = std::chrono::high_resolution_clock::now();
 
@@ -154,6 +154,7 @@ int main()
 
         slime_img.copy_to(cmd, *draw_img);
 
+        engine.begin_rendering(frame, false, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
         imgui_renderer.render(frame, {[&settings]() {
                                   ImGui::Text("Helo");
                                   ImGui::DragFloat("Speed", &settings->movement_speed, 0.01f);
@@ -163,6 +164,7 @@ int main()
                                   ImGui::DragFloat("Sensor Angle Spacing", &settings->sensor_angle_spacing, 0.01f);
                                   ImGui::DragFloat("Turn Speed", &settings->turn_speed, 0.01f);
                               }});
+        engine.end_rendering(frame);
 
         engine.end_frame(frame);
 
