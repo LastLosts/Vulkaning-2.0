@@ -1,5 +1,6 @@
 #include "shader_resources.hpp"
 #include <cassert>
+#include <iostream>
 
 namespace ving
 {

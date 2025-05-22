@@ -20,7 +20,8 @@ using ving::vec4;
 
 int main()
 {
-    ving::Engine engine{};
+    ving::Window window{ving::Engine::initial_window_width, ving::Engine::initial_window_height};
+    ving::Engine engine{window};
     ving::PerspectiveCamera camera{
         ving::radians(60.0f), (float)ving::Engine::initial_window_width / (float)ving::Engine::initial_window_height,
         0.01f, 10000.0f};
@@ -33,36 +34,36 @@ int main()
     // meshes.push_back(ving::generate_quad(engine.core()));
     camera.position.z = -0.05f;
 
-    while (engine.running())
+    while (!glfwWindowShouldClose(window.window()))
     {
         vec3 camera_right = ving::cross(camera.up(), camera.forward());
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_W))
+        if (window.get_key(GLFW_KEY_W))
             camera.position += camera.forward() * camera_move_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_S))
+        if (window.get_key(GLFW_KEY_S))
             camera.position -= camera.forward() * camera_move_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_A))
+        if (window.get_key(GLFW_KEY_A))
             camera.position -= camera_right * camera_move_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_D))
+        if (window.get_key(GLFW_KEY_D))
             camera.position += camera_right * camera_move_speed * engine.delta_time();
 
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_SPACE))
+        if (window.get_key(GLFW_KEY_SPACE))
             camera.position -= camera.up() * camera_move_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_C))
+        if (window.get_key(GLFW_KEY_C))
             camera.position += camera.up() * camera_move_speed * engine.delta_time();
 
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_DOWN))
+        if (window.get_key(GLFW_KEY_DOWN))
             camera.pitch += camera_rotate_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_UP))
+        if (window.get_key(GLFW_KEY_UP))
             camera.pitch -= camera_rotate_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_LEFT))
+        if (window.get_key(GLFW_KEY_LEFT))
             camera.yaw += camera_rotate_speed * engine.delta_time();
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_RIGHT))
+        if (window.get_key(GLFW_KEY_RIGHT))
             camera.yaw -= camera_rotate_speed * engine.delta_time();
 
         camera.update();
 
         ving::FrameInfo frame = engine.begin_frame();
-        engine.begin_rendering(frame, true);
+        engine.begin_rendering(frame, true, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
 
         render.render(frame, camera, meshes);
 

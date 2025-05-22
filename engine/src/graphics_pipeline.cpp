@@ -1,5 +1,6 @@
 #include "graphics_pipeline.hpp"
 #include "render_frames.hpp"
+#include <iostream>
 
 namespace ving
 {

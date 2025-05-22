@@ -1,4 +1,6 @@
+#include <iostream>
 #define VMA_IMPLEMENTATION
+
 #include "vulkan_core.hpp"
 
 #include "utility/vulkan_utils.hpp"
@@ -7,8 +9,25 @@
 
 namespace ving
 {
-VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m_instance{instance.instance}
+VulkanCore::VulkanCore(const Window &window)
 {
+    std::vector<const char *> instance_layers{
+        "VK_LAYER_KHRONOS_validation",
+    };
+
+    uint32_t count;
+    const char *const *window_extensions = glfwGetRequiredInstanceExtensions(&count);
+    std::vector<const char *> instance_extensions{};
+    instance_extensions.reserve(count);
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        instance_extensions.push_back(window_extensions[i]);
+    }
+
+    m_instance = create_vulkan_instance(instance_extensions, instance_layers);
+    m_window_surface = window.create_vulkan_surface(m_instance);
+
     std::vector<const char *> device_extensions{
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
@@ -51,7 +70,7 @@ VulkanCore::VulkanCore(const VulkanInstance &instance, const Window &window) : m
     VkBool32 supported;
     for (uint32_t i = 0; i < queue_family_properties.size(); ++i)
     {
-        vkGetPhysicalDeviceSurfaceSupportKHR(m_physical_device, i, window.vulkan_surface(), &supported);
+        vkGetPhysicalDeviceSurfaceSupportKHR(m_physical_device, i, m_window_surface, &supported);
         if (supported)
         {
             m_present_queue_family = i;
@@ -103,6 +122,8 @@ VulkanCore::~VulkanCore()
 
     vmaDestroyAllocator(m_allocator);
     vkDestroyDevice(m_device, nullptr);
+    vkDestroySurfaceKHR(m_instance, m_window_surface, nullptr);
+    vkDestroyInstance(m_instance, nullptr);
 }
 void VulkanCore::immediate_transfer(std::function<void(VkCommandBuffer cmd)> &&func) const
 {

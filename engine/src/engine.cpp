@@ -6,23 +6,20 @@
 
 namespace ving
 {
-Engine::Engine()
-    : m_window{m_instance, 1280, 720}, m_core{m_instance, m_window}, m_render_frames{m_core, m_window},
-      m_imgui_renderer{m_core, m_window, m_render_frames}, m_delta_time{0.016f}, m_time{0.0f}, m_cursor_x{0.0f},
+Engine::Engine(const Window &window)
+    : m_core{window}, m_render_frames{m_core, {initial_window_width, initial_window_height}},
+      m_imgui_renderer{m_core, window, m_render_frames}, m_delta_time{0.016f}, m_time{0.0f}, m_cursor_x{0.0f},
       m_cursor_y{0.0f}
 {
     m_engine_creation_time = std::chrono::high_resolution_clock::now();
-    m_running = true;
 }
 
 FrameInfo Engine::begin_frame()
 {
     m_frame_start_time = std::chrono::high_resolution_clock::now();
 
-    m_running = !glfwWindowShouldClose(m_window.window());
-
     glfwPollEvents();
-    glfwGetCursorPos(m_window.window(), &m_cursor_x, &m_cursor_y);
+    // glfwGetCursorPos(m_window.window(), &m_cursor_x, &m_cursor_y);
 
     m_cursor_x = clamp(m_cursor_x, 0.0, (double)initial_window_width);
     m_cursor_y = clamp(m_cursor_y, 0.0, (double)initial_window_height);
@@ -46,7 +43,7 @@ void Engine::end_frame(FrameInfo frame)
     m_time = engine_duration.count();
 }
 
-void Engine::begin_rendering(FrameInfo &frame, bool clear)
+void Engine::begin_rendering(FrameInfo &frame, bool clear, VkExtent2D viewport_resoulution)
 {
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_img = frame.draw_img;
@@ -89,8 +86,8 @@ void Engine::begin_rendering(FrameInfo &frame, bool clear)
     vkCmdBeginRendering(cmd, &render_info);
 
     VkViewport viewport{};
-    viewport.width = m_window.width();
-    viewport.height = m_window.height();
+    viewport.width = viewport_resoulution.width;
+    viewport.height = viewport_resoulution.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 

@@ -2,6 +2,7 @@
 #include "fluid_simulation.hpp"
 #include "primitives_renderer.hpp"
 #include "spatial_particle_grid.hpp"
+#include <iostream>
 
 static constexpr uint32_t particle_count = 700;
 static float smoothing_radius = 350.0f;
@@ -123,7 +124,8 @@ static uint32_t highlighted_particle = 0;
 
 int main()
 {
-    ving::Engine engine{};
+    ving::Window window{ving::Engine::initial_window_width, ving::Engine::initial_window_height};
+    ving::Engine engine{window};
     ving::PrimitivesRenderer renderer{engine.core()};
 
     SpatialParticleGrid grid{ving::Engine::initial_window_width, ving::Engine::initial_window_height, smoothing_radius};
@@ -132,12 +134,12 @@ int main()
     std::vector<ving::PrimitiveParameters> parameters{};
     parameters.resize(particle_count);
 
-    while (engine.running())
+    while (!glfwWindowShouldClose(window.window()))
     {
         ving::FrameInfo frame = engine.begin_frame();
         target_density = target_density_im * 0.0001f;
 
-        if (glfwGetKey(engine.window().window(), GLFW_KEY_P) == GLFW_PRESS)
+        if (window.get_key(GLFW_KEY_P) == GLFW_PRESS)
         {
             float min_distance = std::numeric_limits<float>::max();
 
@@ -212,7 +214,7 @@ int main()
         /*    }*/
         /*}*/
 
-        engine.begin_rendering(frame, true);
+        engine.begin_rendering(frame, true, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
         renderer.render(frame, ving::PrimitiveType::Circle, parameters);
         engine.imgui_renderer().render(
             frame, {[&engine, &grid]() {

@@ -3,7 +3,6 @@
 #include "swapchain.hpp"
 #include "texture_2d.hpp"
 #include "vulkan_core.hpp"
-#include <array>
 #include <functional>
 #include <vulkan/vulkan_core.h>
 
@@ -28,7 +27,7 @@ class RenderFrames final
     };
 
   public:
-    RenderFrames(const VulkanCore &core, const Window &window);
+    RenderFrames(const VulkanCore &core, VkExtent2D render_resolution);
     ~RenderFrames();
 
     RenderFrames(const RenderFrames &) = delete;

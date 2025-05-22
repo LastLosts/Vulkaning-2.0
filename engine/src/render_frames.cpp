@@ -6,14 +6,14 @@
 
 namespace ving
 {
-RenderFrames::RenderFrames(const VulkanCore &core, const Window &window)
-    : m_device{core.device()}, m_swapchain{core, window},
-      m_draw_image{core, VkExtent2D{window.width(), window.height()},
+RenderFrames::RenderFrames(const VulkanCore &core, VkExtent2D render_resolution)
+    : m_device{core.device()}, m_swapchain{core, render_resolution},
+      m_draw_image{core, render_resolution,
                    VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
                        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                    VMA_MEMORY_USAGE_GPU_ONLY, draw_image_format},
-      m_depth_image{core, VkExtent2D{window.width(), window.height()}, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                    VMA_MEMORY_USAGE_GPU_ONLY, depth_image_format}
+      m_depth_image{core, render_resolution, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY,
+                    depth_image_format}
 {
     vkGetDeviceQueue(m_device, core.graphics_queue_family(), 0, &m_graphics_queue);
 

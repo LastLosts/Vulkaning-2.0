@@ -9,7 +9,7 @@ namespace ving
 class Swapchain
 {
   public:
-    Swapchain(const VulkanCore &core, const Window &window, uint32_t preferred_image_count = 2);
+    Swapchain(const VulkanCore &core, VkExtent2D image_resolution, uint32_t preferred_image_count = 2);
     ~Swapchain();
 
     Swapchain(const Swapchain &) = delete;

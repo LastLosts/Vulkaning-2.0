@@ -38,7 +38,8 @@ int main()
 {
     float time, delta_time;
 
-    ving::Engine engine{};
+    ving::Window window{ving::Engine::initial_window_width, ving::Engine::initial_window_height};
+    ving::Engine engine{window};
     const ving::ImGuiRenderer &imgui_renderer = engine.imgui_renderer();
 
     std::vector<Agent> agents{};
@@ -128,7 +129,7 @@ int main()
 
     PushConstants push_constants{};
 
-    while (engine.running())
+    while (glfwWindowShouldClose(window.window()))
     {
         auto start = std::chrono::high_resolution_clock::now();
 
