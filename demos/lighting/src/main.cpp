@@ -3,7 +3,8 @@
 #include "math/vec_functions.hpp"
 #include "mesh_generator.hpp"
 #include "mesh_loader.hpp"
-#include "mesh_renderer.hpp"
+#include "model.hpp"
+#include "model_renderer.hpp"
 #include "perspective_camera.hpp"
 
 #include "math/trigonometry.hpp"
@@ -25,11 +26,12 @@ int main()
     ving::PerspectiveCamera camera{
         ving::radians(60.0f), (float)ving::Engine::initial_window_width / (float)ving::Engine::initial_window_height,
         0.01f, 10000.0f};
-    ving::MeshRenderer render{engine.core()};
+    ving::ModelRenderer render{engine.core()};
 
     std::vector<ving::Mesh> meshes{};
-
     meshes.push_back(ving::load_mesh(engine.core(), "./demos/meshes/DragonAttenuation.obj"));
+
+    std::vector<ving::Model> models{{&meshes[0]}};
 
     // meshes.push_back(ving::generate_quad(engine.core()));
     camera.position.z = -0.05f;
@@ -65,17 +67,19 @@ int main()
         ving::FrameInfo frame = engine.begin_frame();
         engine.begin_rendering(frame, true, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
 
-        render.render(frame, camera, meshes);
+        render.render(frame, camera, models);
 
-        engine.imgui_renderer().render(frame, {[&]() {
-                                           ImGui::Text("%f", engine.delta_time());
-                                           ImGui::Text("%f", engine.time());
-                                           ImGui::Text("Forward %f %f %f", camera.forward().x, camera.forward().y,
-                                                       camera.forward().z);
-                                           ImGui::Text("Up %f %f %f", camera.up().x, camera.up().y, camera.up().z);
-                                           ving::imgui_text_vec(camera_right, "Right");
-                                           ving::imgui_text_vec(camera.position, "Camera pos");
-                                       }});
+        engine.imgui_renderer().render(frame, [&]() {
+            ImGui::Text("%f", engine.delta_time());
+            ImGui::Text("%f", engine.time());
+            ImGui::Text("Forward %f %f %f", camera.forward().x, camera.forward().y, camera.forward().z);
+            ImGui::Text("Up %f %f %f", camera.up().x, camera.up().y, camera.up().z);
+            ving::imgui_text_vec(camera_right, "Right");
+            ving::imgui_text_vec(camera.position, "Camera pos");
+            ImGui::DragFloat3("Pos", (float *)&models[0].position);
+            ImGui::DragFloat("Scale", &models[0].scale);
+            ImGui::DragFloat3("Rotate", (float *)&models[0].rotate);
+        });
 
         engine.end_rendering(frame);
         engine.end_frame(frame);

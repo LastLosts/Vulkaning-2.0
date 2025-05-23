@@ -2,6 +2,7 @@
 
 #include "graphics_pipeline.hpp"
 #include "mesh.hpp"
+#include "model.hpp"
 #include "perspective_camera.hpp"
 #include "render_frames.hpp"
 #include "shader_resources.hpp"
@@ -9,7 +10,7 @@
 
 namespace ving
 {
-class MeshRenderer
+class ModelRenderer
 {
     struct PushConstants
     {
@@ -22,9 +23,9 @@ class MeshRenderer
     };
 
   public:
-    MeshRenderer(const VulkanCore &core);
+    ModelRenderer(const VulkanCore &core);
 
-    void render(const FrameInfo &frame, const PerspectiveCamera &camera, std::span<Mesh> meshes);
+    void render(const FrameInfo &frame, const PerspectiveCamera &camera, std::span<Model> models);
 
   private:
     ShaderResources m_resources;

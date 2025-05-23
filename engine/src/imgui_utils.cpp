@@ -12,11 +12,11 @@ void imgui_text_matrix(const mat4 &m)
 }
 void imgui_text_vec(const vec3 &v, const char *text)
 {
-    ImGui::Text("%s %f %f %f", text, v.x, v.y, v.z);
+    ImGui::Text("%s: %f %f %f", text, v.x, v.y, v.z);
 }
-void imgui_text_vec(const vec4 &v)
+void imgui_text_vec(const vec4 &v, const char *text)
 {
-    ImGui::Text("%f %f %f %f", v.x, v.y, v.z, v.w);
+    ImGui::Text("%s: %f %f %f %f", text, v.x, v.y, v.z, v.w);
 }
 
 } // namespace ving

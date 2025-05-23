@@ -1,4 +1,4 @@
-#include "mesh_renderer.hpp"
+#include "model_renderer.hpp"
 #include "output_operators.hpp"
 #include "utility/vulkan_utils.hpp"
 
@@ -6,7 +6,7 @@
 
 namespace ving
 {
-MeshRenderer::MeshRenderer(const VulkanCore &core)
+ModelRenderer::ModelRenderer(const VulkanCore &core)
 {
     std::vector<ving::ShaderBindingSet> bindings{
         // Set 1
@@ -42,7 +42,7 @@ MeshRenderer::MeshRenderer(const VulkanCore &core)
     vkDestroyShaderModule(core.device(), fragment, nullptr);
 }
 
-void MeshRenderer::render(const FrameInfo &frame, const PerspectiveCamera &camera, std::span<Mesh> meshes)
+void ModelRenderer::render(const FrameInfo &frame, const PerspectiveCamera &camera, std::span<Model> models)
 {
     VkCommandBuffer cmd = frame.cmd;
     Texture2D *draw_img = frame.draw_img;
@@ -53,19 +53,22 @@ void MeshRenderer::render(const FrameInfo &frame, const PerspectiveCamera &camer
 
     PushConstants push{};
 
-    for (auto &&mesh : meshes)
+    for (auto &&model : models)
     {
-        push.pvm_matrix = camera.projection() * camera.view();
+        if (model.mesh == nullptr)
+            return;
+
+        push.pvm_matrix = camera.projection() * camera.view() * model.mat();
         // push.pvm_matrix = camera.view();
-        push.vertex_buffer_address = mesh.vertex_address();
+        push.vertex_buffer_address = model.mesh->vertex_address();
 
         // std::cout << camera.projection();
         // std::cout << camera.view();
         // std::cout << push.pvm_matrix;
-        vkCmdBindIndexBuffer(cmd, mesh.index_buffer().buffer(), 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(cmd, model.mesh->index_buffer().buffer(), 0, VK_INDEX_TYPE_UINT32);
         vkCmdPushConstants(cmd, m_mesh_pipeline.layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                            sizeof(PushConstants), &push);
-        vkCmdDrawIndexed(cmd, mesh.index_count(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(cmd, model.mesh->index_count(), 1, 0, 0, 0);
     }
 }
 } // namespace ving

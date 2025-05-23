@@ -19,8 +19,10 @@ void PerspectiveCamera::update()
 
     // float c1 = 1.0f, c2 = cos(radians(pitch)), c3 = cos(radians(yaw));
     // float s1 = 0.0f, s2 = sin(radians(pitch)), s3 = sin(radians(yaw));
-    float c1 = cos(radians(yaw)), c2 = cos(radians(pitch)), c3 = 1.0f;
-    float s1 = sin(radians(yaw)), s2 = sin(radians(pitch)), s3 = 0.0f;
+    // float c1 = cos(radians(yaw)), c2 = cos(radians(pitch)), c3 = 1.0f;
+    // float s1 = sin(radians(yaw)), s2 = sin(radians(pitch)), s3 = 0.0f;
+    float c1 = cos(radians(yaw)), c2 = cos(radians(pitch)), c3 = cos(radians(0));
+    float s1 = sin(radians(yaw)), s2 = sin(radians(pitch)), s3 = sin(radians(0));
 
     // YXZ Rotation from wikipedia
     rot[0][0] = c3 * c1 - s3 * s2 * s1;
