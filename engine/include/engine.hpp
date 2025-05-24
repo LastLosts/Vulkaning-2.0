@@ -29,7 +29,7 @@ class Engine
     [[nodiscard]] const VulkanCore &core() const noexcept { return m_core; }
     [[nodiscard]] const ImGuiRenderer &imgui_renderer() const noexcept { return m_imgui_renderer; }
 
-    FrameInfo begin_frame();
+    FrameInfo begin_frame(VkExtent2D window_resolution);
     void end_frame(FrameInfo frame);
 
     void begin_rendering(FrameInfo &frame, bool clear, VkExtent2D viewport_resolution);

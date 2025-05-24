@@ -6,6 +6,10 @@
 
 namespace ving
 {
+Swapchain::Swapchain()
+    : m_device{VK_NULL_HANDLE}, m_present_queue{VK_NULL_HANDLE}, m_swapchain{VK_NULL_HANDLE}, m_image_extent{0, 0}
+{
+}
 Swapchain::Swapchain(const VulkanCore &core, VkExtent2D image_resolution, uint32_t preferred_image_count)
     : m_device{core.device()}
 {
@@ -15,10 +19,11 @@ Swapchain::Swapchain(const VulkanCore &core, VkExtent2D image_resolution, uint32
                                           (core.present_queue_family() == core.graphics_queue_family()) ? 1 : 2,
                                           preferred_image_count);
 
-    uint32_t count;
+    uint32_t count{};
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, nullptr);
     m_images.resize(count);
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, m_images.data());
+    m_views.reserve(count);
 
     for (size_t i = 0; i < m_images.size(); ++i)
     {
@@ -29,19 +34,14 @@ Swapchain::~Swapchain()
 {
     for (size_t i = 0; i < m_images.size(); ++i)
     {
-        /*vkDestroyImage(m_device, m_images[i], nullptr);*/
         vkDestroyImageView(m_device, m_views[i], nullptr);
     }
 
     vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
 }
-uint32_t Swapchain::acquire_image(VkSemaphore image_acquire_semaphore)
+VkResult Swapchain::acquire_image(VkSemaphore image_acquire_semaphore, uint32_t &out_index)
 {
-    uint32_t index{};
-    if (vkAcquireNextImageKHR(m_device, m_swapchain, 10000000000, image_acquire_semaphore, nullptr, &index) !=
-        VK_SUCCESS)
-        std::cout << "Failed to acquire swapchain image, probably it was timeout\n";
-    return index;
+    return vkAcquireNextImageKHR(m_device, m_swapchain, 10000000000, image_acquire_semaphore, nullptr, &out_index);
 }
 
 void Swapchain::copy_image_to_swapchain(VkCommandBuffer cmd, VkImage source, VkExtent2D extent,
@@ -58,7 +58,7 @@ void Swapchain::transition_swapchain_image_to_present(VkCommandBuffer cmd, uint3
                      VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 }
 
-void Swapchain::present_image(VkSemaphore wait_semaphore, uint32_t acquire_image_index)
+VkResult Swapchain::present_image(VkSemaphore wait_semaphore, uint32_t acquire_image_index)
 {
     VkPresentInfoKHR info{};
     info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -68,9 +68,33 @@ void Swapchain::present_image(VkSemaphore wait_semaphore, uint32_t acquire_image
     info.pWaitSemaphores = &wait_semaphore;
     info.pImageIndices = &acquire_image_index;
 
-    if (vkQueuePresentKHR(m_present_queue, &info) != VK_SUCCESS)
+    return vkQueuePresentKHR(m_present_queue, &info);
+}
+void Swapchain::resize(VkExtent2D render_resolution)
+{
+    const VulkanCore &core = VulkanCore::instance();
+    vkDeviceWaitIdle(core.device());
+
+    vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+    for (size_t i = 0; i < m_images.size(); ++i)
     {
-        std::cout << "Failed to present image\n";
+        vkDestroyImageView(m_device, m_views[i], nullptr);
+    }
+
+    m_image_extent = render_resolution;
+    m_swapchain =
+        create_vulkan_swapchain(core.physical_device(), core.device(), core.window_surface(), m_image_extent,
+                                (core.present_queue_family() == core.graphics_queue_family()) ? 1 : 2, m_images.size());
+
+    uint32_t count{};
+    vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, nullptr);
+    m_images.resize(count);
+    vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, m_images.data());
+    m_views.reserve(count);
+
+    for (size_t i = 0; i < m_images.size(); ++i)
+    {
+        m_views.push_back(create_vulkan_image_view(m_device, m_images[i], VK_FORMAT_B8G8R8A8_UNORM));
     }
 }
 } // namespace ving

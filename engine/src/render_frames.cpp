@@ -51,15 +51,22 @@ RenderFrames::~RenderFrames()
     vkDestroyCommandPool(m_device, m_immediate_pool, nullptr);
     vkDestroyFence(m_device, m_immediate_fence, nullptr);
 }
-FrameInfo RenderFrames::begin_frame()
+FrameInfo RenderFrames::begin_frame(VkExtent2D render_resolution)
 {
+    if (m_resize_requested)
+        m_swapchain.resize(render_resolution);
+
     FrameResources &current_frame = m_frames[m_frame_number % m_frames_in_flight];
     VkCommandBuffer cmd = current_frame.commands;
 
     vkWaitForFences(m_device, 1, &current_frame.render_fence, VK_TRUE, 1000000000);
     vkResetFences(m_device, 1, &current_frame.render_fence);
 
-    m_acquired_image_index = m_swapchain.acquire_image(current_frame.image_acquired_semaphore);
+    VkResult acquire_result = m_swapchain.acquire_image(current_frame.image_acquired_semaphore, m_acquired_image_index);
+    if (acquire_result == VK_ERROR_OUT_OF_DATE_KHR)
+        m_resize_requested = true;
+    else if (acquire_result != VK_SUCCESS)
+        std::cout << "Failed to acquire swapchain image" << acquire_result << "\n";
 
     vkResetCommandBuffer(cmd, 0);
 
@@ -107,7 +114,14 @@ void RenderFrames::end_frame()
     submit.pCommandBufferInfos = &cmd_info;
 
     vkQueueSubmit2(m_graphics_queue, 1, &submit, current_frame.render_fence);
-    m_swapchain.present_image(current_frame.render_finished_semaphore, m_acquired_image_index);
+
+    VkResult present_result =
+        m_swapchain.present_image(current_frame.render_finished_semaphore, m_acquired_image_index);
+
+    if (present_result == VK_ERROR_OUT_OF_DATE_KHR || present_result == VK_SUBOPTIMAL_KHR)
+        m_resize_requested = true;
+    else if (present_result != VK_SUCCESS)
+        std::cout << "Failed to present swapchain image" << present_result << "\n";
 
     ++m_frame_number;
 }

@@ -6,10 +6,11 @@
 
 namespace ving
 {
+
 class Window
 {
   public:
-    Window(uint32_t width, uint32_t height);
+    Window(uint32_t width, uint32_t height, bool resizable = false);
     ~Window();
 
     Window(const Window &) = delete;
@@ -25,6 +26,8 @@ class Window
     [[nodiscard]] GLFWwindow *window() const { return m_window; }
 
   private:
+    friend struct ResizeCallback;
+
     uint32_t m_width;
     uint32_t m_height;
 

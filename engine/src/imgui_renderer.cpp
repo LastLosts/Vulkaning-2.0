@@ -2,6 +2,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
+#include "window.hpp"
 #include <iostream>
 
 namespace ving
@@ -37,7 +38,7 @@ ImGuiRenderer::ImGuiRenderer(const VulkanCore &core, const Window &window, const
     ImGui_ImplGlfw_InitForVulkan(window.window(), true);
 
     ImGui_ImplVulkan_InitInfo init_info{};
-    init_info.Instance = core.instance();
+    init_info.Instance = core.vulkan_instance();
     init_info.PhysicalDevice = core.physical_device();
     init_info.Device = core.device();
     init_info.QueueFamily = core.graphics_queue_family();

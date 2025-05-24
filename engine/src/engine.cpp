@@ -14,7 +14,7 @@ Engine::Engine(const Window &window)
     m_engine_creation_time = std::chrono::high_resolution_clock::now();
 }
 
-FrameInfo Engine::begin_frame()
+FrameInfo Engine::begin_frame(VkExtent2D window_resolution)
 {
     m_frame_start_time = std::chrono::high_resolution_clock::now();
 
@@ -24,7 +24,7 @@ FrameInfo Engine::begin_frame()
     m_cursor_x = clamp(m_cursor_x, 0.0, (double)initial_window_width);
     m_cursor_y = clamp(m_cursor_y, 0.0, (double)initial_window_height);
 
-    FrameInfo frame = m_render_frames.begin_frame();
+    FrameInfo frame = m_render_frames.begin_frame(window_resolution);
 
     return frame;
 }

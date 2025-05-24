@@ -133,7 +133,7 @@ int main()
     {
         auto start = std::chrono::high_resolution_clock::now();
 
-        ving::FrameInfo frame = engine.begin_frame();
+        ving::FrameInfo frame = engine.begin_frame({window.width(), window.height()});
         ving::Texture2D *draw_img = frame.draw_img;
         VkCommandBuffer cmd = frame.cmd;
 

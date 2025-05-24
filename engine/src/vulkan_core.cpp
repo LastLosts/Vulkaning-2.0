@@ -1,16 +1,37 @@
-#include <iostream>
 #define VMA_IMPLEMENTATION
-
 #include "vulkan_core.hpp"
 
 #include "utility/vulkan_utils.hpp"
+#include "window.hpp"
 #include <algorithm>
+#include <iostream>
 #include <vector>
 
 namespace ving
 {
+static const VulkanCore *instance_ptr = nullptr;
+
+const VulkanCore &VulkanCore::instance()
+{
+    if (instance_ptr == nullptr)
+    {
+        std::cout << "ERROR: Core wasn't created, please create VulkanCore\n";
+    }
+
+    return *instance_ptr;
+}
+
 VulkanCore::VulkanCore(const Window &window)
 {
+    if (instance_ptr == nullptr)
+    {
+        instance_ptr = this;
+    }
+    else
+    {
+        std::cout << "ERROR: Can't create more then one instance of vulkan core";
+    }
+
     std::vector<const char *> instance_layers{
         "VK_LAYER_KHRONOS_validation",
     };

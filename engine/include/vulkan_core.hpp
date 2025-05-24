@@ -1,13 +1,16 @@
 #pragma once
 
 #include "vk_mem_alloc.h"
-#include "window.hpp"
 #include <functional>
 
 namespace ving
 {
+class Window;
 class VulkanCore
 {
+  public:
+    static const VulkanCore &instance();
+
   public:
     VulkanCore(const Window &window);
     ~VulkanCore();
@@ -19,7 +22,7 @@ class VulkanCore
 
     [[nodiscard]] uint32_t graphics_queue_family() const noexcept { return m_graphics_queue_family; }
     [[nodiscard]] uint32_t present_queue_family() const noexcept { return m_present_queue_family; }
-    [[nodiscard]] VkInstance instance() const noexcept { return m_instance; }
+    [[nodiscard]] VkInstance vulkan_instance() const noexcept { return m_instance; }
     [[nodiscard]] VkSurfaceKHR window_surface() const noexcept { return m_window_surface; }
     [[nodiscard]] VkDevice device() const noexcept { return m_device; }
     [[nodiscard]] VkPhysicalDevice physical_device() const noexcept { return m_physical_device; }

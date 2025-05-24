@@ -11,6 +11,7 @@
 #include "math/vec3.hpp"
 
 #include "output_operators.hpp"
+#include <iostream>
 
 static constexpr float camera_rotate_speed = 40.0f;
 static constexpr float camera_move_speed = 1.0f;
@@ -64,7 +65,7 @@ int main()
 
         camera.update();
 
-        ving::FrameInfo frame = engine.begin_frame();
+        ving::FrameInfo frame = engine.begin_frame(VkExtent2D{window.width(), window.height()});
         engine.begin_rendering(frame, true, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
 
         render.render(frame, camera, models);
@@ -76,8 +77,8 @@ int main()
             ImGui::Text("Up %f %f %f", camera.up().x, camera.up().y, camera.up().z);
             ving::imgui_text_vec(camera_right, "Right");
             ving::imgui_text_vec(camera.position, "Camera pos");
-            ImGui::DragFloat3("Pos", (float *)&models[0].position);
-            ImGui::DragFloat("Scale", &models[0].scale);
+            ImGui::DragFloat3("Pos", (float *)&models[0].position, 0.1f);
+            ImGui::DragFloat("Scale", &models[0].scale, 0.1f, 0.0f, std::numeric_limits<float>::max());
             ImGui::DragFloat3("Rotate", (float *)&models[0].rotate);
         });
 

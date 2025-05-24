@@ -136,7 +136,7 @@ int main()
 
     while (!glfwWindowShouldClose(window.window()))
     {
-        ving::FrameInfo frame = engine.begin_frame();
+        ving::FrameInfo frame = engine.begin_frame({window.width(), window.height()});
         target_density = target_density_im * 0.0001f;
 
         if (window.get_key(GLFW_KEY_P) == GLFW_PRESS)

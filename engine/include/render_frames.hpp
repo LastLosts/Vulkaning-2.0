@@ -35,7 +35,7 @@ class RenderFrames final
     RenderFrames(RenderFrames &&) = delete;
     RenderFrames &operator=(RenderFrames &&) = delete;
 
-    FrameInfo begin_frame();
+    FrameInfo begin_frame(VkExtent2D render_resolution);
     void end_frame();
 
     void immediate_submit(std::function<void(VkCommandBuffer cmd)> &&func);
@@ -63,5 +63,7 @@ class RenderFrames final
     VkCommandPool m_immediate_pool;
     VkCommandBuffer m_immediate_commands;
     VkFence m_immediate_fence;
+
+    bool m_resize_requested;
 };
 } // namespace ving

@@ -1,18 +1,38 @@
 #include "window.hpp"
+#include <functional>
 #include <iostream>
+
+using namespace std::placeholders;
 
 namespace ving
 {
-Window::Window(uint32_t width, uint32_t height) : m_width{width}, m_height{height}
+struct ResizeCallback
+{
+    static void callback(GLFWwindow *window, int width, int height)
+    {
+        Window *win = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+        win->m_width = width;
+        win->m_height = height;
+    }
+};
+
+Window::Window(uint32_t width, uint32_t height, bool resizable) : m_width{width}, m_height{height}
 {
     if (!glfwInit())
         std::cout << "Failed to initialize glfw\n";
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    if (resizable)
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    else
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
     m_window = glfwCreateWindow(width, height, "Title", nullptr, nullptr);
     if (!m_window)
         std::cout << "Failed to create GLFW window\n";
+
+    glfwSetWindowUserPointer(m_window, this);
+    glfwSetFramebufferSizeCallback(m_window, ResizeCallback::callback);
 }
 Window::~Window()
 {

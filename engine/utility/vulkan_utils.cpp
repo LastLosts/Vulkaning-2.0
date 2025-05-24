@@ -263,7 +263,7 @@ VkSwapchainKHR create_vulkan_swapchain(VkPhysicalDevice physical_device, VkDevic
     info.minImageCount = preferred_image_count;
     info.imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
     info.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    info.imageExtent = extent;
+    info.imageExtent = surface_capabilites.maxImageExtent;
     info.imageArrayLayers = 1;
     info.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     info.queueFamilyIndexCount = queue_family_count;

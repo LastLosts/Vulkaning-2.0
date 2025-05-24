@@ -1,12 +1,13 @@
 #pragma once
 
 #include "render_frames.hpp"
-#include "vulkan_core.hpp"
 
 #include "imgui.h"
 
 namespace ving
 {
+class VulkanCore;
+
 class ImGuiRenderer
 {
   public:
