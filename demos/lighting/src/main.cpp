@@ -55,9 +55,9 @@ int main()
             camera.position += camera.up() * camera_move_speed * engine.delta_time();
 
         if (window.get_key(GLFW_KEY_DOWN))
-            camera.pitch += camera_rotate_speed * engine.delta_time();
-        if (window.get_key(GLFW_KEY_UP))
             camera.pitch -= camera_rotate_speed * engine.delta_time();
+        if (window.get_key(GLFW_KEY_UP))
+            camera.pitch += camera_rotate_speed * engine.delta_time();
         if (window.get_key(GLFW_KEY_LEFT))
             camera.yaw += camera_rotate_speed * engine.delta_time();
         if (window.get_key(GLFW_KEY_RIGHT))
@@ -66,20 +66,19 @@ int main()
         camera.update();
 
         ving::FrameInfo frame = engine.begin_frame(VkExtent2D{window.width(), window.height()});
-        engine.begin_rendering(frame, true, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
+        engine.begin_rendering(frame, true, {window.width(), window.height()});
 
         render.render(frame, camera, models);
 
         engine.imgui_renderer().render(frame, [&]() {
             ImGui::Text("%f", engine.delta_time());
+            ImGui::Text("FPS: %f", 1.0f / engine.delta_time());
             ImGui::Text("%f", engine.time());
-            ImGui::Text("Forward %f %f %f", camera.forward().x, camera.forward().y, camera.forward().z);
-            ImGui::Text("Up %f %f %f", camera.up().x, camera.up().y, camera.up().z);
-            ving::imgui_text_vec(camera_right, "Right");
-            ving::imgui_text_vec(camera.position, "Camera pos");
-            ImGui::DragFloat3("Pos", (float *)&models[0].position, 0.1f);
-            ImGui::DragFloat("Scale", &models[0].scale, 0.1f, 0.0f, std::numeric_limits<float>::max());
-            ImGui::DragFloat3("Rotate", (float *)&models[0].rotate);
+            ving::imgui_text_vec(camera.forward(), "forward:");
+            ving::imgui_text_vec(camera.up(), "up");
+            ving::imgui_text_vec(camera_right, "right");
+            ving::imgui_text_vec(camera.position, "camera pos");
+            ving::imgui_drag_model_transform(models[0]);
         });
 
         engine.end_rendering(frame);

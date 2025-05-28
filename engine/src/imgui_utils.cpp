@@ -2,9 +2,16 @@
 
 #include "imgui.h"
 #include "math/mat4.hpp"
+#include "model.hpp"
 
 namespace ving
 {
+void imgui_drag_model_transform(ving::Model &model)
+{
+    ImGui::DragFloat3("Pos", (float *)&model.position, 0.1f);
+    ImGui::DragFloat("Scale", &model.scale, 0.1f, 0.0f, 1000000000.0f);
+    ImGui::DragFloat3("Rotate", (float *)&model.rotate);
+}
 void imgui_text_matrix(const mat4 &m)
 {
     ImGui::Text("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f", m[0][0], m[1][0], m[2][0], m[3][0], m[0][1],

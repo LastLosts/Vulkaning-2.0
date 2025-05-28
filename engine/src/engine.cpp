@@ -21,8 +21,8 @@ FrameInfo Engine::begin_frame(VkExtent2D window_resolution)
     glfwPollEvents();
     // glfwGetCursorPos(m_window.window(), &m_cursor_x, &m_cursor_y);
 
-    m_cursor_x = clamp(m_cursor_x, 0.0, (double)initial_window_width);
-    m_cursor_y = clamp(m_cursor_y, 0.0, (double)initial_window_height);
+    m_cursor_x = clamp(m_cursor_x, 0.0, (double)window_resolution.width);
+    m_cursor_y = clamp(m_cursor_y, 0.0, (double)window_resolution.height);
 
     FrameInfo frame = m_render_frames.begin_frame(window_resolution);
 

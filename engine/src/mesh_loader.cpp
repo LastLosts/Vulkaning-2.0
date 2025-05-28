@@ -20,7 +20,7 @@ Mesh load_mesh(const VulkanCore &core, std::string_view filepath)
         std::cerr << "ERR: " << err << '\n';
     if (!success)
     {
-        std::cerr << "FAILED TO LOAD MESH!\n";
+        std::cerr << "FAILED TO LOAD MESH!" << filepath << "\n";
         return {};
     }
 

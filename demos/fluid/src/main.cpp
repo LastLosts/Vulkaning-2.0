@@ -214,11 +214,12 @@ int main()
         /*    }*/
         /*}*/
 
-        engine.begin_rendering(frame, true, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
+        engine.begin_rendering(frame, true, {window.width(), window.height()});
         renderer.render(frame, ving::PrimitiveType::Circle, parameters);
         engine.imgui_renderer().render(
             frame, {[&engine, &grid]() {
                 ImGui::Text("Engine delta time: %f", engine.delta_time() * 1000.0f);
+                ImGui::Text("FPS: %f", 1.0f / (engine.delta_time() * 1000.0f));
                 /*ImGui::InputFloat("Smoothing radius", &smoothing_radius);*/
                 ImGui::DragFloat("Target density", &target_density_im, 0.001f, 0.0f, 100.0f);
                 ImGui::InputFloat("Pressure multiplier", &pressure_multiplier);

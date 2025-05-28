@@ -44,18 +44,12 @@ PrimitivesRenderer::PrimitivesRenderer(const VulkanCore &core) : m_quad{generate
     vkDestroyShaderModule(core.device(), circle_shader, nullptr);
     vkDestroyShaderModule(core.device(), square_shader, nullptr);
 
-    float half_width = (float)Engine::initial_window_width / 2.0f;
-    float half_height = (float)Engine::initial_window_height / 2.0f;
-
-    // m_push.ortho = ortho(-half_width, half_width, -half_height, half_height, 0.01f, 100.0f);
-    // m_push.ortho = ortho(0.0f, (float)Engine::initial_window_width, 0.0f, Engine::initial_window_height, 0.01f,
-    // 100.0f);
     m_push.ortho = ortho(0.0f, (float)Engine::initial_window_width, 0.0f, Engine::initial_window_height);
-    // m_push.ortho = mat4{1.0f};
 
     vkDestroyShaderModule(core.device(), primitive_vertex_shader, nullptr);
 }
 
+// TODO Render resolution
 void PrimitivesRenderer::render(const FrameInfo &frame, PrimitiveType type, std::span<PrimitiveParameters> parameters,
                                 vec3 color)
 {

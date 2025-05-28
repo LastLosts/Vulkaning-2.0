@@ -17,7 +17,7 @@ Swapchain::Swapchain(const VulkanCore &core, VkExtent2D image_resolution, uint32
     m_image_extent = image_resolution;
     m_swapchain = create_vulkan_swapchain(core.physical_device(), core.device(), core.window_surface(), m_image_extent,
                                           (core.present_queue_family() == core.graphics_queue_family()) ? 1 : 2,
-                                          preferred_image_count);
+                                          preferred_image_count, VK_PRESENT_MODE_IMMEDIATE_KHR);
 
     uint32_t count{};
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, nullptr);

@@ -154,7 +154,7 @@ int main()
 
         slime_img.copy_to(cmd, *draw_img);
 
-        engine.begin_rendering(frame, false, {ving::Engine::initial_window_width, ving::Engine::initial_window_height});
+        engine.begin_rendering(frame, false, {window.width(), window.height()});
         imgui_renderer.render(frame, {[&settings]() {
                                   ImGui::Text("Helo");
                                   ImGui::DragFloat("Speed", &settings->movement_speed, 0.01f);

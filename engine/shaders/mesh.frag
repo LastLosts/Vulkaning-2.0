@@ -20,6 +20,7 @@ void main()
     vec4 shaded = dot(lighting_settings.dir, in_normal) * color;
     shaded.w = 1.0;
     out_frag_color = shaded;
+    out_frag_color = vec4(1.0);
 
     // out_frag_color = vec4(in_uv, 0.0, 1.0);
     // out_frag_color = vec4(1.0);
